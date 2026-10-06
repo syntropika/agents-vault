@@ -926,7 +926,7 @@ label {
   opacity: 0.55;
   cursor: not-allowed;
 }
-.task-limits {
+.task-editor .task-limits {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
@@ -939,7 +939,7 @@ label {
   padding: 6px 0;
 }
 @media (max-width: 600px) {
-  .task-limits {
+  .task-editor .task-limits {
     grid-template-columns: 1fr;
     gap: 0;
   }
