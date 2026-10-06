@@ -1,103 +1,93 @@
-# Authenticated local approval
+# Local approvals and MCP Apps
 
-Status: implemented synthetic flow, 2026-10-06. This is URL elicitation plus a local operator page, not an MCP App or direct authorization from a harness response.
-
-## Updated product direction
-
-The next approval flow must use MCP Apps in the configured trusted harness. A client without Apps support must be refused for this flow, with no automatic browser fallback. Core MCP form elicitation is a separate capability and does not satisfy that requirement. Storage unlock and per-task approval are separate actions; an unlocked operator session should not require a password for every task. The local console now implements a 15-minute operator session. MCP Apps capability negotiation, App UI integration, and its broker-authorized decision channel still need implementation and validation. Hiding a decision tool from the model does not authenticate its caller.
-
-The remainder of this guide describes the existing local-page implementation and its test evidence, not the planned Apps flow.
+Status: implemented synthetic component and browser flows, 2026-10-06. Approval does not start execution. Installed macOS custody and exclusive execution ownership remain open.
 
 ## Operator console
 
-The root page at `http://127.0.0.1:14323/` is a React/Tailwind console for credentials, configured permissions, and task approvals. It defaults to dark mode with a temporary light-mode toggle. Effect validates API responses at runtime. The existing request-specific link remains available to the current MCP adapter; the console itself is not an MCP App.
+`avd` serves the local React/Tailwind console at `http://127.0.0.1:14323/` when `AVD_APPROVAL_UI=1`. Sign in once for an absolute 15-minute operator session. The browser receives an HttpOnly, SameSite=Strict cookie and keeps CSRF only in memory. No passphrase or session proof is persisted in browser storage. The broker retains a zeroizing passphrase copy for authenticated operations. Locking stops actions, discards loaded credentials, requests and MCP enrollments, and invalidates web sessions. Signing out ends only the current browser session.
 
-Sign in with the vault passphrase to create an absolute 15-minute session. The browser receives an HttpOnly, SameSite=Strict cookie; the CSRF token stays in application memory. No credential, session token, or passphrase is written to browser storage. The broker retains a zeroizing passphrase copy in memory for authenticated operations. Expired sessions are rejected immediately and removed by a 15-second cleanup timer. Locking invalidates sessions under the broker's exclusive gate; it also stops tasks. Sign out removes the current browser session without stopping tasks.
+The console administers credentials, action permissions, the active action recipe, pending decisions, and MCP session enrollment. Changes require paused action execution. Saving a recipe revokes the old and new connection's grants before atomically replacing the private policy file. A failed write leaves access revoked. The operator must grant the new exact recipe explicitly before enabling actions.
 
-Operator sign-in and enabling task execution are separate. Credentials can be added, rotated, disconnected, or granted the broker's configured recipe only while execution is paused. Permission editing does not create arbitrary command recipes. Granting without a matching operator-owned recipe is refused. Decisions authorize one attempt within 60 seconds and do not return execution capabilities to the page.
+## MCP Apps flow
 
-The service embeds the compiled HTML, CSS, and JavaScript. Its Content Security Policy allows same-origin assets and API calls, prohibits inline scripts and framing, and makes responses non-cacheable. A build without web assets returns an unavailable response for the console. Exact Host/Origin checks, bounded JSON bodies, one-use login nonces, throttled authentication, and CSRF checks protect the operator API. Loopback HTTP and an authenticated page do not establish exclusive execution ownership against another process sharing the agent UID.
+The adapter requires the client's initialization capabilities to advertise `io.modelcontextprotocol/ui` with `text/html;profile=mcp-app`. Unsupported clients are refused. There is no automatic chat, form elicitation, or browser-link fallback in this adapter.
 
-## Flow
+1. Sign in to the local console and enable action execution with a granted synthetic recipe.
+2. Configure `av-mcp` as a stdio server in a trusted MCP Apps harness.
+3. Call `connect_approval`. Its App displays a broker-issued session ID.
+4. Refresh Settings in the local console. Connect only the exact ID displayed in that App. A pending enrollment expires after two minutes.
+5. Refresh the App connection. The enrolled harness may now submit decisions for 15 minutes, for up to 32 actions created through that adapter session.
+6. Call `request_proxy_task` with the exact connection, version, host, and command vector. The broker checks its configured recipe and returns frozen intent to the App.
+7. Review the command, credential version, destination, runtime, connection quota, and request quota. Click **Approve action** or **Deny**.
+8. Resume an approved request through `av run --resume REQUEST_ID`. Approval permits one attempt within 60 seconds; action runtime and quotas still apply.
 
 ```mermaid
 sequenceDiagram
-    participant C as CLI or MCP client
-    participant M as Unprivileged MCP adapter
-    participant B as Service-owned broker
-    participant U as Operator browser
-    C->>B: Request frozen task
-    B-->>C: Pending request ID
-    C->>M: review_request(ID)
-    M->>B: Read frozen intent and approval link
-    M-->>C: URL elicitation or manual local link
-    C->>U: Open local approval page
-    U->>B: GET task review
-    B-->>U: Exact command, connection version, host, limits and one-use form
-    U->>B: POST decision, form nonce and vault passphrase
-    B->>B: Authenticate operator and decide the exact request
-    M->>B: Read actual request state
-    M-->>C: Approved, denied, pending or consumed
-    C->>B: av run --resume ID
-    B->>B: Consume one attempt and start task
+    participant O as Operator console
+    participant H as Trusted MCP Apps harness
+    participant A as av-mcp adapter
+    participant B as Broker
+    H->>A: connect_approval
+    A->>B: Register random session proof
+    B-->>H: Public session ID, App resource
+    O->>B: Authenticate and enroll exact session ID
+    H->>A: request_proxy_task(exact intent)
+    A->>B: Request using private session proof
+    B-->>H: Frozen review and intent digest
+    H->>H: Render App; operator clicks Approve or Deny
+    H->>A: App-only decide_task(ID, digest, decision)
+    A->>B: Submit scoped proof and exact decision
+    B->>B: Check enrollment, epoch, owner, pending state and digest
+    B-->>H: Authoritative review state
 ```
 
-The page at `http://127.0.0.1:14323/requests/REQUEST_ID` belongs to `avd`. The operator sends the passphrase directly to that page. Neither MCP arguments nor elicitation responses contain it. The private terminal approval route remains available.
+The session proof is randomly generated by the adapter and retained in its memory. The broker stores its hash. It is never returned in tool content, resource HTML, model arguments, or App arguments. The adapter receives no vault passphrase, key, or private administration token. Its proof grants only bounded action decisions, not credential management or execution. A request ID alone cannot submit a decision. Another enrolled session cannot decide that session's requests. Edited intent, repeated decisions, expired enrollment, revoked enrollment, and old vault epochs are rejected.
 
-The broker publishes a link only after its local listener binds. The MCP adapter obtains that link from the broker and rejects a non-loopback destination, a different request ID, or an added query. Project files and tool arguments cannot choose the approval URL.
+The App uses the official SDK and host bridge. It has no direct HTTP access to the operator API and requests no external network or resource domains. It neither reads the operator cookie nor relaxes console Origin, CSRF, or framing protections. Host theme is respected; dark is the default.
 
-A client supporting MCP URL elicitation can offer to open the page. Other clients receive the link for manual review. Returning `accept`, `decline`, `cancel`, or an arbitrary `approve=true` object does not decide a request. After elicitation, the adapter reads the broker state rather than interpreting the client's answer as approval. No actual Codex or other named harness compatibility claim follows from the protocol tests.
+### Trust boundary
 
-The adapter exposes only `request_proxy_task` and `review_request`. Execution goes through `av run --resume`; MCP has no execution tool that could return a proxy capability to the model.
+The configured harness is trusted to distinguish operator App interactions from model tool calls and to enforce visibility: `["app"]` for decision tools. This metadata is not authentication or cryptographic proof of a human click. An enrolled malicious harness can synthesize decisions; operator enrollment is the explicit delegation of that authority. Processes sharing the adapter's user may also attack its memory or transport. Enrollment does not claim process isolation.
 
-## Enable and use
+The adapter reviews only requests created through that adapter session. CLI-created requests continue to use the authenticated local console or private terminal decision path; they are not silently attached to MCP sessions. Disconnecting an MCP session prevents further decisions. It does not `cancel` an already-approved attempt; use **Pause and lock** to stop actions and discard all approvals.
 
-The Linux systemd unit and macOS broker plist enable the listener with `AVD_APPROVAL_UI=1`. These files need installation or deployment before their settings take effect. A development daemon must set the same variable explicitly. An unset variable disables the page; unsupported values fail startup. The listener is fixed to IPv4 loopback and an occupied port fails startup instead of selecting another destination. It never binds a public interface.
+The existing same-UID execution issue remains: another client knowing an approved request ID can race `Execute`, receive the host proxy capability, or call `FinishHostProxy`. These changes do not close that release gate. Use synthetic credentials for the current proxy prototype.
 
-1. Initialize and unlock the broker through the existing operator path.
-2. Request the configured synthetic task with `av run -- COMMAND` or MCP `request_proxy_task`.
-3. Call MCP `review_request`, or open the local link printed by `av`.
-4. Review the exact command arguments, connection version, target host, runtime and quotas. Enter the vault passphrase on the local page and choose Approve or Deny.
-5. Resume an approved request with `av run --resume REQUEST_ID`.
+## Active action editor
 
-Approving allows one execution attempt within 60 seconds. The task's own runtime and quotas still come from the operator-owned recipe. A form expires after 120 seconds and is consumed once. Failed authentication requires reloading the form. Pending requests retain the broker's existing five-minute decision window. Locking or restarting the broker discards requests and grants; an old page cannot authorize a new session.
+An action is a saved command recipe: executable, exact arguments, credential, destination and limits. Saving it does not execute or approve it. The Actions page configures one active host-proxy action per broker. Multiple simultaneously active recipes are not implemented. The operator selects an existing active credential; its exact host and current version are derived by the broker. The executable is an absolute executable file. Each argument is a separate field and preserves spaces, empty values, and line breaks without invoking a shell. Limits remain bounded to 1–60 seconds, 1–16 HTTP requests, and 1–8 connections.
 
-## MCP adapter configuration
+The prototype still requires a synthetic loopback test upstream and an absolute CA file. It does not enable arbitrary production providers. Installed services validate trusted executable and CA paths. Guest recipes remain installer-managed. Policy saves compare a SHA-256 revision, preventing a stale browser from overwriting another edit.
 
-Build the prototype adapter with `cargo build --locked -p av-mcp --bin av-mcp`. Configure the client's stdio MCP server command to point to the absolute `av-mcp` binary and pass `AVD_AGENT_SOCKET` as a non-secret environment setting:
+The policy uses the deployment's configured path. Without a configured policy path, the default is the vault path with the extension changed to `proxy.json`, in the private broker-owned vault directory. Linux validates this derived policy on unlock. macOS installed deployments still require the fixed installed policy path. Recipe changes are read at the next unlock, after explicit permission is granted again.
 
-| Platform | Installed agent socket |
+## Build and configure
+
+Build embedded assets before the Rust adapter:
+
+```sh
+cd web
+npm ci
+npm run verify
+cd ..
+cargo build --locked -p avd -p av-mcp
+```
+
+An adapter built without App assets refuses App initialization. A console built without assets returns unavailable. The production binaries need no Node runtime.
+
+Configure a client's stdio server with the absolute `av-mcp` binary and the non-secret `AVD_AGENT_SOCKET` environment setting:
+
+| Platform | Installed socket |
 | --- | --- |
 | Linux | `/run/agents-vault/agent.sock` |
 | macOS | `/private/var/db/agents-vault/agent/agent.sock` |
 
-The adapter runs as the configured agent user. It needs no vault path, passphrase, admin token or privileged identity. For development tests, the socket can belong to a disposable broker. Client-specific configuration syntax and actual URL-elicitation UI must be verified with the selected client; this guide does not install a harness launcher.
+Tools: `connect_approval`, `request_proxy_task`, `review_request`, and App-only `approval_session_status` and `decide_task`. No MCP execution or credential-reading tool is exposed.
 
-## Controls and assumptions
+## Evidence
 
-- Both approval and denial require the vault passphrase. Knowing a request ID or obtaining a form nonce grants no decision authority.
-- The HTTP handler checks exact Host and Origin, rejects cross-site submissions and query strings, requires a bounded form body, and rejects duplicate or unknown fields.
-- Form nonces are random, bound to one request, expire, and are consumed before authentication. Parallel replay of one form cannot authorize twice.
-- Broker-owned review fields are JSON escaped, including Unicode layout controls, then HTML escaped. Pages disallow scripts, framing, external resources and foreign form destinations. Responses use `no-store` and `no-referrer`.
-- Connections, bodies and open forms are bounded. Authentication attempts are throttled. Passphrase authentication runs outside the asynchronous I/O worker and secret-bearing application buffers use zeroizing wrappers. This is best-effort memory handling; HTTP libraries and the browser may retain their own copies.
-- The installed broker identity and vault permissions remain necessary. Running the daemon under the agent's login UID is a development test, not protected custody.
-- The operator must trust the local browser, host and installed broker. Plain loopback HTTP is not remote administration, TLS identity verification, or protection from a compromised operator session. Do not tunnel or expose this listener as a remote approval interface.
-- A same-UID process can still race execution of an approved request, copy its temporary proxy capability or end a host task. This change authenticates the decision; it does not solve that separate execution-ownership issue.
+Tests cover private action saves, version and revision conflicts, invalid limits, grant revocation, absence of Apps capability, resource MIME/CSP and tool metadata, unauthorized enrollment, ownership, changed review digest, replay, revocation, expiry, and vault epochs. Real browser tests use the official SDK AppBridge, the real Rust stdio adapter, and a disposable encrypted broker to approve and deny at desktop and mobile widths. The web workflow creates and edits the recipe and verifies its permissions are revoked after changes. Linux tests exercise the joined component flow. macOS tests exercise recipe validation, enrollment logic, MCP protocol/resource handling, and operator HTTP sessions; installed macOS acceptance is still outstanding.
 
-## Verification without a harness
+This is reference SDK interoperability evidence, not a claim that Codex or every branded harness has been tested. A genuine compatible installed client remains a separate acceptance gate.
 
-`crates/avd/tests/approval_ui.rs` exercises the actual HTTP listener and broker sockets: escaped review, wrong origin and Host, unknown or duplicate fields, bad password, consumed and mismatched nonces, simultaneous submissions, lock and stale-session refusal.
-
-`crates/av-mcp/src/main.rs` tests protocol behavior using a synthetic client: forged positive responses, malformed positive content, cancellation, client errors and timeouts, unsupported URL elicitation, authentic browser approval and denial, and rejection of remote or mismatched links. The simulated browser supplies only synthetic credentials directly to HTTP.
-
-`crates/av-cli/tests/brokered_curl.rs` joins the public CLI, locked-start session, private operator authentication and local HTTPS proxy. It covers pending, denial, expiry, altered command, concurrent decisions and execution, replay, successful injection, relock and stale request rejection. Run it separately because it binds the fixed proxy port:
-
-```sh
-cargo test --locked -p av --test brokered_curl -- --ignored --nocapture
-```
-
-`packaging/linux/test_systemd_lifecycle.py` tests the local page in a disposable guest running real systemd, a service-owned vault and separate broker, agent and runner UIDs. It checks origin, authentication and form replay before resuming a versioned connection through public `av run`.
-
-The Linux workspace suite, development broker/MCP tests on macOS, public CLI lifecycle tests on both systems, and the disposable installed Linux guest passed. Linux and macOS development tests do not prove installed macOS custody. The macOS installed-service gate, full agent-route review and same-UID execution ownership remain open. The Codex Security scan launcher did not return a confirmed scan identity during this task; these test results must not be described as a completed independent static security scan.
-
-The operator console also has real HTTP lifecycle tests in `crates/avd/tests/operator_web.rs`, strict frontend checks, and browser workflow/accessibility checks in `web/tests/operator.spec.ts`. These tests use disposable encrypted vaults and synthetic credentials; they do not prove installed custody or actual MCP Apps compatibility.
+Protocol references: [MCP Apps specification](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx), [official SDK quickstart](https://apps.extensions.modelcontextprotocol.io/api/documents/Quickstart.html).

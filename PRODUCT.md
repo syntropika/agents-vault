@@ -12,11 +12,11 @@ The operator interface uses React, TypeScript, Tailwind CSS, and Effect. ESLint,
 
 ## Users
 
-Developers and operators configuring local credentials for command-line tools and agents. They need to review access before a task uses a credential.
+Developers and operators configuring local credentials for command-line tools and agents. They need to review access before an action uses a credential.
 
 ## Product Purpose
 
-Agents Vault provides a local credential broker and the `av` CLI. The operator interface administers credentials and permitted use, with task approval as a separate view.
+Agents Vault provides a local credential broker and the `av` CLI. The operator interface administers credentials and permitted use, with action approval as a separate view.
 
 ## Operating Context
 
@@ -24,7 +24,7 @@ The first supported service platforms are Linux and macOS. `av run` can deliver 
 
 ## Capabilities and Constraints
 
-SQLCipher is the current credential backend. Native keyring adapters are planned but unimplemented. Credential values must not appear in lists, review payloads, logs, or browser persistence. Permissions remain separate from storage. Approval must show the exact frozen task, target, credential version, duration, and request quota. The planned MCP approval flow requires a compatible MCP Apps harness; unsupported clients must fail closed. The existing prototype uses an authenticated local approval page. Same-user task execution ownership and installed macOS custody remain open security gates. Do not claim production security or implemented MCP Apps.
+SQLCipher is the current credential backend. Native keyring adapters are planned but unimplemented. Credential values must not appear in lists, review payloads, logs, or browser persistence. Permissions remain separate from storage. Approval must show the exact frozen action, target, credential version, duration, and request quota. The implemented MCP adapter requires a compatible MCP Apps harness and fails closed otherwise. An authenticated local console enrolls a harness session once; its App submits exact per-action decisions without a vault password. The configured harness is trusted to enforce App-only tool visibility. Same-user action execution ownership and installed macOS custody remain open security gates. Do not claim production security or untested branded-harness compatibility.
 
 ## Brand Commitments
 
@@ -40,7 +40,7 @@ Existing Rust storage, broker, CLI, local approval handlers, and synthetic Linux
 
 - Local operation without a mandatory cloud service.
 - Explicit permission and destination before credential delivery.
-- Clear separation between unlock, configuration, and task approval.
+- Clear separation between unlock, configuration, and action approval.
 - Honest unavailable and error states instead of simulated success.
 
 ## Open Decisions

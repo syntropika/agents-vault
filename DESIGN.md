@@ -197,7 +197,9 @@ The outer stage uses the stage spacing step and centers a shell with maximum wid
 
 The operator's credential surface uses a selector column (300px), a flexible detail column, and gap (34px). Grouped settings align an icon tile, label/description, and value or control. Actions wrap with the control-gap spacing step. Approval and workspace settings surfaces have maximum widths (900px) and (880px), respectively.
 
-At (1100px) and below, navigation moves to a second header row, the selector narrows to (250px), and settings values wrap beneath labels. At (640px) and below, stage padding becomes (12px), main content padding becomes (26px 18px), the credential surface stacks into one column, and the sign-in composition also stacks. Task limits change from four columns to two. Long identifiers and commands wrap rather than forcing overflow.
+At (1100px) and below, navigation moves to a second header row, the selector narrows to (250px), and settings values wrap beneath labels. At (640px) and below, stage padding becomes (12px), main content padding becomes (26px 18px), the credential surface stacks into one column, and the sign-in composition also stacks. Approval metadata changes from four columns to two. Long identifiers and commands wrap rather than forcing overflow.
+
+The Actions editor uses the workspace settings width with three columns of limit fields and gap (16px), stacked into one column at (600px) and below. The separate MCP Apps review uses a single column with maximum width (760px), padding (24px), and thin dividers between label/value pairs; its padding reduces to (16px) at the same breakpoint.
 
 Spacing is compact around individual controls and wider between sections. It is an observed collection of values rather than a strict mathematical grid. Reuse the recorded spacing steps where the same role recurs.
 
@@ -244,9 +246,11 @@ Form fields use surface fill, text-colored content, a single-pixel border, and t
 
 Errors appear in a feedback banner with an icon and explanatory text; the error variant changes its border to muted. The source does not define a separate per-field invalid style.
 
+The Actions editor extends the same rounded field geometry to selects and textareas, using subtle fill and minimum height (38px). Its labels use (13px) at weight (500). Full destination and credential version remain visible beneath the credential select even when the option text is clipped; long destinations wrap. Arguments are separate resizable textareas with adjacent removal controls.
+
 ### Navigation
 
-Segmented navigation uses a subtle pill track with gaps (3px). Segments use compact control typography and padding (8px 16px). The current page is marked with `aria-current="page"` and text color. Dark mode uses background-tone fill for the current segment and surface-tone fill for inactive hover; the current segment retains its background-tone fill on hover. Light mode uses surface-tone current fill and hover-tone inactive hover. Inactive segments use muted text; hover restores text color. Keyboard focus uses a (2px) text-colored outline inset by (-2px), keeping it visible inside the track. Header icon actions use outline offset (2px); the brand link uses offset (3px) and the field radius. The narrow layout stretches the track across its header row and reduces segment padding to (8px 10px) and text to (11px).
+Segmented navigation uses a subtle pill track with gaps (3px). Segments use compact control typography and padding (8px 16px). The current page is marked with `aria-current="page"` and text color. Dark mode uses background-tone fill for the current segment and surface-tone fill for inactive hover; the current segment retains its background-tone fill on hover. Light mode uses surface-tone current fill and hover-tone inactive hover. Inactive segments use muted text; hover restores text color. Keyboard focus uses a (2px) text-colored outline inset by (-2px), keeping it visible inside the track. Header icon actions use outline offset (2px); the brand link uses offset (3px) and the field radius. The narrow layout stretches the track across its header row and reduces segment padding to (8px 10px) and text to (11px). At (600px) and below, the five destinations, including Actions, wrap within a rounded group (18px) with gap (2px), horizontal segment padding (8px), and text (12px); all destinations remain visible.
 
 ### Credential Selection and Inline Settings
 

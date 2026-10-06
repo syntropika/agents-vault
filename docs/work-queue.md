@@ -1,6 +1,6 @@
 # Work queue
 
-Status: tasks after removing provider-specific and harness-specific packages, 2026-10-06. Complete the security gates in order; each gate needs evidence from the current provider-neutral build. Distribution and notarization work is deferred while the approval boundary is tested locally.
+Status: actions after removing provider-specific and harness-specific packages, 2026-10-06. Complete the security gates in order; each gate needs evidence from the current provider-neutral build. Distribution and notarization work is deferred while the approval boundary is tested locally.
 
 ## 1. Stabilize the generic workspace
 
@@ -14,19 +14,19 @@ Status: tasks after removing provider-specific and harness-specific packages, 20
 
 ## 1a. Complete the fixed-address host proxy
 
-- Completed in the synthetic build: the broker-owned, persistent, default-deny listener at `127.0.0.1:14322` routes up to 16 concurrent task grants by capability. Each grant closes independently on command exit, broker lock, expiry, or cancellation. A copied capability can consume its task's quota; a same-UID caller can also race `Execute` for an approved request ID. The host execution path therefore lacks exclusive task identity.
+- Completed in the synthetic build: the broker-owned, persistent, default-deny listener at `127.0.0.1:14322` routes up to 16 concurrent action grants by capability. Each grant closes independently on command exit, broker lock, expiry, or cancellation. A copied capability can consume its action's quota; a same-UID caller can also race `Execute` for an approved request ID. The host execution path therefore lacks exclusive action identity.
 - Public `av run` with `curl` reached a local synthetic HTTPS provider without changing the destination URL on Linux and macOS. The Linux test used a versioned connection; the macOS test used a development fixture. The Linux container boundary test rejects forged administration on both public sockets. Repeat these checks as installed acceptance tests where applicable.
 - Validate the versioned protected-connection path on an installed macOS service. The installed Linux systemd/AppArmor guest has passed the synthetic path through public `av run`. Test that release selection and proxy delivery stay independent of agent-edited project files on both platforms. Keep a credential out of the host command's environment in proxy mode.
 - Package and test the signed macOS broker with a host client. Resolve Linux service namespace routing to the host client without exposing the vault or proxy management channel.
-- Run the synthetic CLI and local HTTPS provider through the public `av` command on Linux and macOS without an agent harness. Cover deny, expiry, replay, task close, wrong host, TLS failure, credential reflection, and concurrent requests.
+- Run the synthetic CLI and local HTTPS provider through the public `av` command on Linux and macOS without an agent harness. Cover deny, expiry, replay, action close, wrong host, TLS failure, credential reflection, and concurrent requests.
 
-**Done when:** a fresh Linux or macOS installation can keep a local proxy listening, run one approved non-fixture CLI task against its unchanged HTTPS URL, and retain the real credential only inside the protected broker.
+**Done when:** a fresh Linux or macOS installation can keep a local proxy listening, run one approved non-fixture CLI action against its unchanged HTTPS URL, and retain the real credential only inside the protected broker.
 
 ## 1b. Optional isolated command runner
 
 - Keep the small no-NIC Linux guest as an optional execution tier for commands that can run in it. Define how an approved executable and its runtime files enter the guest, how their bytes are pinned to the grant, and how updates change that identity.
 - Replace the fixture-only guest protocol and manifest before claiming general command support. Reject commands that cannot be packaged or verified.
-- A macOS-only CLI remains a host proxy task until a native command confinement path has been implemented and validated. A full macOS guest is not a default installation requirement.
+- A macOS-only CLI remains a host proxy action until a native command confinement path has been implemented and validated. A full macOS guest is not a default installation requirement.
 
 **Done when:** the optional isolated tier can execute a selected non-fixture command without broadening broker or host access.
 
@@ -40,11 +40,11 @@ Status: tasks after removing provider-specific and harness-specific packages, 20
 
 ## 3. Prove the approval authority boundary
 
-- Updated product direction: implement approval in MCP Apps through the configured trusted harness. Check client capabilities and refuse the flow without Apps support; do not automatically fall back to the local page. Form elicitation alone does not satisfy this requirement. Define the broker-authorized decision channel and an unlock/session lifecycle that avoids a password per task. Test absent support, cancellation, timeout, forged decisions, exact-request binding, and a genuine compatible client before replacing the current flow. See the [decision summary](decision-summary.md).
-- The MCP adapter does not hold the operator token or turn a form answer into approval. A protected terminal decision checks the vault passphrase. A disposable installed Linux guest passed the synthetic wrong-passphrase, `review`, `approve`, and `deny` checks. Keep this safe default while testing macOS and the remaining agent routes.
-- Linux and macOS component tests reject Decide messages on agent-controlled sockets and reject unknown agent request fields. The Linux container test rejects forged administration on both public sockets. The macOS installed acceptance script covers the private helper's review, approval, and denial, but has not run on a disposable Mac. A same-UID agent client can still race `Execute` for an approved request and can end a task through `FinishHostProxy`; resolve this before a protected host execution claim.
-- Implemented: a broker-owned local approval page authenticates the vault passphrase independently of MCP. URL elicitation offers the link; clients without URL support can open it manually. Forged or cancelled client responses leave the broker decision unchanged. Validate the [local approval flow](approval-flow.md) on installed macOS and in a real client; the UI does not solve same-UID execution takeover.
-- Covered in synthetic tests: explicit approve and deny, forged or malformed client responses, unsupported clients, cancellation, client errors and timeouts, wrong HTTP origin, bad password, one-use form replay, expiry, simultaneous decisions and execution, and lock. Complete installed macOS evidence and real-client checks; retain version rotation and every agent-route check.
+- Implemented: MCP Apps capability negotiation, embedded App UI and operator-enrolled decision sessions through a configured trusted harness. Check client capabilities and refuse the flow without Apps support; do not automatically fall back to the local page. Form elicitation alone does not satisfy this requirement. The enrolled-session channel avoids a password per action. Finish acceptance in a genuine compatible installed client. See the [decision summary](decision-summary.md).
+- The adapter holds a scoped, memory-only enrollment proof; it never receives a vault password or administration token. App-only tool visibility is enforced by the trusted harness, not treated as authentication.
+- Linux and macOS component tests reject Decide messages on agent-controlled sockets and reject unknown agent request fields. The Linux container test rejects forged administration on both public sockets. The macOS installed acceptance script covers the private helper's review, approval, and denial, but has not run on a disposable Mac. A same-UID agent client can still race `Execute` for an approved request and can end an action through `FinishHostProxy`; resolve this before a protected host execution claim.
+- Implemented: local console decisions and MCP App approval/denial with exact frozen intent, owner, expiry, revocation and replay checks. The official SDK browser bridge passes desktop/mobile tests. Genuine installed-client interoperability and installed macOS acceptance remain open.
+- Covered in synthetic tests: App approve and deny, unsupported clients, unenrolled and foreign sessions, changed intent, enrollment expiry, decision replay and revocation. Existing local-page tests separately cover wrong HTTP origin, bad password, one-use form replay, expiry, simultaneous decisions and execution, and lock. Complete installed macOS evidence and real-client checks; retain version rotation and every agent-route check.
 - Enumerate every agent-controlled shell, MCP tool, hook, browser/computer tool, sub-agent, and resume path in each supported harness.
 - Verify privileged operator commands and sockets stay unreachable from those routes.
 
@@ -54,11 +54,11 @@ Status: tasks after removing provider-specific and harness-specific packages, 20
 
 - Pin a provider-neutral fixture command, exact host, quota, runtime, executable identity, and minimum inputs.
 - On Linux, test child filesystem access, process inspection, raw network egress, direct TCP, proxy bypass, and service socket access under the installed runner.
-- On macOS, verify the signed service-owned proxy, fixed loopback listener, task capability, and host client under separate service and login identities. For the optional guest tier, authenticate the guest transport to the broker; do not trust a guest-supplied task ID alone.
-- Test TLS trust, redirects, cancellation, response reflection, protocol incompatibility, and request/response size limits. A denied or expired task must not start.
+- On macOS, verify the signed service-owned proxy, fixed loopback listener, action capability, and host client under separate service and login identities. For the optional guest tier, authenticate the guest transport to the broker; do not trust a guest-supplied action ID alone.
+- Test TLS trust, redirects, cancellation, response reflection, protocol incompatibility, and request/response size limits. A denied or expired action must not start.
 - Measure cold and warm startup, package size, and update integrity.
 
-**Done when:** the same frozen synthetic task cannot reach the credential or forbidden network paths on either installed platform, while one approved request reaches the local HTTPS provider.
+**Done when:** the same frozen synthetic action cannot reach the credential or forbidden network paths on either installed platform, while one approved request reaches the local HTTPS provider.
 
 ## 5. Recovery and distribution
 
@@ -81,6 +81,6 @@ Multiple vaults, OAuth, hardware/KMS unlock, broader action catalogs, and protec
 
 ## Operator console implementation
 
-Implemented locally: layout 3 with dark default, compact rounded controls, credential lifecycle, configured recipe grants/revocation, task review, and an authenticated 15-minute operator session. React, Tailwind, Effect, strict TypeScript/ESLint, oxfmt, runtime decoding, unit tests, real HTTP tests, and browser workflows are included. The compiled console is embedded into `avd`.
+Implemented locally: layout 3 with dark default, compact rounded controls, credential lifecycle, configured recipe grants/revocation, action review, and an authenticated 15-minute operator session. React, Tailwind, Effect, strict TypeScript/ESLint, oxfmt, runtime decoding, unit tests, real HTTP tests, and browser workflows are included. The compiled console is embedded into `avd`.
 
-Remaining gates: actual MCP Apps negotiation/integration, native storage adapters, installed macOS protected-connection acceptance, and exclusive ownership of approved execution. The console does not close those gates.
+Remaining gates: genuine installed MCP Apps client acceptance, native storage adapters, installed macOS protected-connection acceptance, and exclusive ownership of approved execution. Action editing and bounded MCP session enrollment are implemented; the broker still supports one active recipe. The console does not close those gates.
