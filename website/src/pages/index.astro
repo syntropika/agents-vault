@@ -1,0 +1,70 @@
+---
+import { createMarkdownProcessor } from '@astrojs/markdown-remark';
+import pages from '../../.generated/pages.json';
+import '../styles/landing.css';
+
+const repository = 'https://github.com/syntropika/agents-vault';
+const landing = pages.find((page) => page.slug === 'landing')!;
+const processor = await createMarkdownProcessor();
+const sections = landing.humanBody.split(/\n## /);
+const intro = sections.shift()!.split(/\n\n/);
+const headline = intro[0].split('. ').map((line) => line.endsWith('.') ? line : line + '.');
+const description = intro[1];
+const notice = (await processor.render(intro[2])).code;
+const links = (await processor.render(intro[3])).code;
+const body = await Promise.all(sections.map(async (section) => {
+  const separator = section.indexOf('\n');
+  return { title: section.slice(0, separator), html: (await processor.render(section.slice(separator + 1))).code };
+}));
+const quickstart = pages.find((page) => page.slug === 'quickstart')!;
+const buildCommands = quickstart.source.match(/```sh\n(cargo build[^]*?)\n```/)![1];
+const canonical = Astro.site ? new URL('/', Astro.site).href : undefined;
+---
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agents Vault — local configuration and credential access</title>
+    <meta name="description" content={landing.description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="text/markdown" href="/index.md" title="This page as Markdown" />
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="Agent documentation index" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="site-shell">
+      <header class="site-header">
+        <a class="brand" href="/" aria-label="Agents Vault home"><span class="brand-mark" aria-hidden="true">av</span>Agents Vault</a>
+        <nav aria-label="Main navigation"><a href="/docs/">Documentation</a><a href={repository}>GitHub</a></nav>
+      </header>
+      <main id="main">
+        <section class="intro" aria-labelledby="headline">
+          <div class="intro-copy">
+            <h1 id="headline">{headline.map((line) => <span>{line}</span>)}</h1>
+            <p class="description">{description}</p>
+            <div class="intro-links" set:html={links} />
+            <div class="alpha-note" set:html={notice} />
+          </div>
+          <aside class="source-preview" aria-label="Build the CLI from a checkout">
+            <div class="preview-heading"><span>Start from a checkout</span><span class="preview-label">Rust CLI</span></div>
+            <pre><code>{buildCommands}</code></pre>
+            <div class="preview-divider"></div>
+            <div class="preview-caption"><span>av.toml</span><span>Public configuration</span></div>
+            <pre class="config"><code><span class="code-muted">schema</span> = 2<br /><br /><span class="code-muted">[project]</span><br />id = "example"<br /><br /><span class="code-muted">[values.APP_ENV]</span><br />type = "string"<br />value = "development"</code></pre>
+            <a class="preview-next" href="/docs/quickstart/">Run your first project <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M4 10h12m-5-5 5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg></a>
+          </aside>
+        </section>
+        <section class="details" aria-label="How Agents Vault works">
+          {body.map((section) => <article><h2>{section.title}</h2><div set:html={section.html} /></article>)}
+        </section>
+        <section class="reading" aria-labelledby="reading-heading">
+          <div><h2 id="reading-heading">Read it your way.</h2><p>Browse the guides, copy a page, or use the same documentation as plain text.</p></div>
+          <nav aria-label="Documentation formats"><a href="/docs/">Human guides</a><a href="/llms.txt">Agent index</a><a href="/llms-full.txt">Complete Markdown</a></nav>
+        </section>
+      </main>
+      <footer><span>Agents Vault · alpha prototype</span><a href="/docs/limits-and-trust/">Limits and trust</a><a href={repository}>Source code</a></footer>
+    </div>
+  </body>
+</html>

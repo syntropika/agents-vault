@@ -33,6 +33,10 @@ Project settings live in `./av.toml` by default, or at the path supplied with `a
 
 An unregistered MCP session has no approval authority. Explicit operator enrollment delegates bounded decision authority to a trusted harness for 15 minutes and up to 32 actions. Matching frozen intent, ownership, pending state, and vault epoch are checked by the broker. This does not cryptographically prove a human click. The shared broker separately enforces execution ownership at both public socket endpoints. Installed macOS coverage and a joined agent-route audit remain release gates before real proxy credentials are supported.
 
+## Public documentation
+
+The local landing and documentation site lives in [website](website/README.md). It generates searchable human pages, a Markdown version of every guide, `llms.txt`, and `llms-full.txt` from [one content source](docs/public/index.md).
+
 ## What to read next
 
 - [Product concept](docs/product-concept.md): intended user experience and security levels.
