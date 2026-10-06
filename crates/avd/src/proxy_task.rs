@@ -130,7 +130,7 @@ fn validate_linux_ca_binding(request: &av_core::SecretAccessRequest, ca: &[u8]) 
     Ok(())
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ProxyPolicy {
     pub connection: String,
@@ -196,7 +196,10 @@ impl ProxyPolicy {
             !self.command.is_empty()
                 && self.command.len() <= 32
                 && Path::new(&self.command[0]).is_absolute()
-                && self.command.iter().all(|arg| arg.len() <= 4096),
+                && self
+                    .command
+                    .iter()
+                    .all(|arg| arg.len() <= 4096 && !arg.contains('\0')),
             "policy must pin one absolute executable and a bounded command vector"
         );
         ensure!(

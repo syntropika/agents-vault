@@ -49,6 +49,13 @@ struct Decision {
     approve: bool,
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Enrollment {
+    pairing_id: uuid::Uuid,
+    approve: bool,
+}
+
 fn random() -> String {
     let mut bytes = [0; 32];
     rand::rng().fill_bytes(&mut bytes);
@@ -307,7 +314,9 @@ impl OperatorWeb {
                 };
                 if !matches!(
                     operation,
-                    ManagementOperation::ConnectAdd { .. }
+                    ManagementOperation::TaskShow
+                        | ManagementOperation::TaskSave { .. }
+                        | ManagementOperation::ConnectAdd { .. }
                         | ManagementOperation::ConnectList
                         | ManagementOperation::ConnectShow { .. }
                         | ManagementOperation::ConnectReplace { .. }
@@ -323,6 +332,34 @@ impl OperatorWeb {
                 {
                     Ok(value) => reply(StatusCode::OK, value),
                     Err(_) => failure(StatusCode::CONFLICT, "management_refused"),
+                }
+            }
+            (&Method::GET, "/api/operator/mcp") => {
+                let _gate = session.broker.read().await;
+                if session.web_epoch() != operator_epoch {
+                    return failure(StatusCode::UNAUTHORIZED, "session_changed");
+                }
+                reply(StatusCode::OK, session.mcp.list(operator_epoch))
+            }
+            (&Method::POST, "/api/operator/mcp") => {
+                let bytes = match body(&mut request).await {
+                    Ok(b) => b,
+                    Err(s) => return failure(s, "invalid_body"),
+                };
+                let Ok(enrollment) = serde_json::from_slice::<Enrollment>(&bytes) else {
+                    return failure(StatusCode::BAD_REQUEST, "invalid_body");
+                };
+                let gate = session.broker.read().await;
+                if gate.is_none() || session.web_epoch() != operator_epoch {
+                    return failure(StatusCode::CONFLICT, "mcp_enrollment_refused");
+                }
+                match session.mcp.authorize(
+                    enrollment.pairing_id,
+                    enrollment.approve,
+                    operator_epoch,
+                ) {
+                    Ok(()) => reply(StatusCode::OK, json!({"ok":true})),
+                    Err(_) => failure(StatusCode::CONFLICT, "mcp_enrollment_refused"),
                 }
             }
             (&Method::GET, "/api/operator/requests") => {

@@ -68,7 +68,7 @@ impl VaultSource {
             #[cfg(not(target_os = "macos"))]
             {
                 crate::service::validate_trusted_path(&self.vault, true)?;
-                if let Some(path) = &self.proxy_policy {
+                if let Some(path) = &crate::task_recipe::existing_path(self)? {
                     crate::service::validate_trusted_path(path, true)?;
                     #[cfg(target_os = "linux")]
                     {
@@ -101,6 +101,7 @@ impl VaultSource {
 pub struct Session {
     pub(crate) broker: Arc<RwLock<Option<Arc<Broker>>>>,
     pub(crate) source: Option<VaultSource>,
+    pub(crate) mcp: crate::mcp_approval::McpApprovals,
     approval_address: std::sync::OnceLock<std::net::SocketAddr>,
     web_epoch: std::sync::atomic::AtomicU64,
 }
@@ -110,6 +111,7 @@ impl Session {
         Arc::new(Self {
             broker: Arc::new(RwLock::new(Some(broker))),
             source: None,
+            mcp: Default::default(),
             approval_address: std::sync::OnceLock::new(),
             web_epoch: std::sync::atomic::AtomicU64::new(0),
         })
@@ -120,6 +122,7 @@ impl Session {
         Ok(Arc::new(Self {
             broker: Arc::new(RwLock::new(None)),
             source: Some(source),
+            mcp: Default::default(),
             approval_address: std::sync::OnceLock::new(),
             web_epoch: std::sync::atomic::AtomicU64::new(0),
         }))
@@ -235,7 +238,7 @@ impl Session {
         anyhow::ensure!(state.is_none(), "session is already unlocked");
         source.validate()?;
         let vault = av_core::Vault::open(&source.vault, passphrase)?;
-        let broker = if let Some(policy) = &source.proxy_policy {
+        let broker = if let Some(policy) = &crate::task_recipe::existing_path(source)? {
             if source.service_mode && cfg!(target_os = "linux") {
                 Broker::from_vault_with_enforced_proxy_policy(&vault, policy)?
             } else {
@@ -347,6 +350,7 @@ impl Session {
         let mut state = self.broker.write().await;
         self.web_epoch
             .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        self.mcp.clear();
         if let Some(broker) = state.take() {
             broker.shutdown().await;
         }

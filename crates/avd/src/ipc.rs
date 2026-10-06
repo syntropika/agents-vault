@@ -57,12 +57,42 @@ pub struct Server {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
 pub enum AgentRequest {
-    Request { operation: Operation },
-    Review { request_id: Uuid },
-    ApprovalLink { request_id: Uuid },
-    Execute { request_id: Uuid },
-    TaskStatus { task_id: Uuid },
-    FinishHostProxy { task_id: Uuid, exit_code: i32 },
+    Request {
+        operation: Operation,
+    },
+    Review {
+        request_id: Uuid,
+    },
+    ApprovalLink {
+        request_id: Uuid,
+    },
+    McpEnroll {
+        nonce: String,
+    },
+    McpRequest {
+        nonce: String,
+        operation: Operation,
+    },
+    McpReview {
+        nonce: String,
+        request_id: Uuid,
+    },
+    McpDecide {
+        nonce: String,
+        request_id: Uuid,
+        review_digest: String,
+        approve: bool,
+    },
+    Execute {
+        request_id: Uuid,
+    },
+    TaskStatus {
+        task_id: Uuid,
+    },
+    FinishHostProxy {
+        task_id: Uuid,
+        exit_code: i32,
+    },
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -318,6 +348,34 @@ async fn handle_agent(
                 Ok(_) => Reply::error("request_not_pending"),
                 Err(error) => broker_reply::<Value>(Err(error)),
             },
+            Ok(AgentRequest::McpEnroll { nonce }) => {
+                mcp_reply(session.mcp.enroll(&nonce, session.web_epoch()))
+            }
+            Ok(AgentRequest::McpRequest { nonce, operation }) => mcp_reply(session.mcp.request(
+                &nonce,
+                operation,
+                broker,
+                session.web_epoch(),
+            )),
+            Ok(AgentRequest::McpReview { nonce, request_id }) => mcp_reply(session.mcp.review(
+                &nonce,
+                request_id,
+                broker,
+                session.web_epoch(),
+            )),
+            Ok(AgentRequest::McpDecide {
+                nonce,
+                request_id,
+                review_digest,
+                approve,
+            }) => mcp_reply(session.mcp.decide(
+                &nonce,
+                request_id,
+                &review_digest,
+                approve,
+                broker,
+                session.web_epoch(),
+            )),
             Ok(AgentRequest::Execute { request_id }) => {
                 broker_reply(broker.execute_or_start(request_id, now_seconds()).await)
             }
@@ -433,6 +491,13 @@ async fn call_inner<T: Serialize>(socket: &Path, request: &T) -> io::Result<Repl
         ));
     }
     serde_json::from_str(&reply).map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
+}
+
+fn mcp_reply(result: anyhow::Result<Value>) -> Reply {
+    match result {
+        Ok(data) => Reply::data(data),
+        Err(_) => Reply::error("mcp_authorization_refused"),
+    }
 }
 
 #[cfg(test)]

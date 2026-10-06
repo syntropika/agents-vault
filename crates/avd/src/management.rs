@@ -51,6 +51,11 @@ pub enum ManagementOperation {
         value: String,
     },
     ConnectList,
+    TaskShow,
+    TaskSave {
+        expected_revision: Option<String>,
+        recipe: crate::task_recipe::TaskRecipe,
+    },
     ConnectShow {
         id: String,
     },
@@ -478,10 +483,7 @@ pub(crate) fn execute(
         }
         ManagementOperation::Grant { name, preapprove } => {
             ensure!(vault.exists(name)?, "secret does not exist");
-            let path = source
-                .proxy_policy
-                .as_ref()
-                .context("service has no installed proxy policy")?;
+            let path = &crate::task_recipe::path(source);
             let bytes = fs::read(path)?;
             ensure!(bytes.len() <= 16 * 1024, "proxy policy is too large");
             let proxy: ProxyPolicy = serde_json::from_slice(&bytes)?;
@@ -529,6 +531,11 @@ pub(crate) fn execute(
                 json!({"action": "connect_add", "connection": metadata, "grants": 0, "locked": true}),
             )
         }
+        ManagementOperation::TaskShow => crate::task_recipe::show(source),
+        ManagementOperation::TaskSave {
+            expected_revision,
+            recipe,
+        } => crate::task_recipe::save(vault, source, expected_revision, recipe),
         ManagementOperation::ConnectList => {
             let reply = json!({"connections": vault.list_connections()?, "locked": true});
             bounded_admin_reply(reply)
@@ -578,10 +585,7 @@ pub(crate) fn execute(
             id,
             expected_version,
         } => {
-            let path = source
-                .proxy_policy
-                .as_ref()
-                .context("service has no installed proxy policy")?;
+            let path = &crate::task_recipe::path(source);
             let bytes = fs::read(path)?;
             ensure!(bytes.len() <= 16 * 1024, "proxy policy is too large");
             let proxy: ProxyPolicy = serde_json::from_slice(&bytes)?;

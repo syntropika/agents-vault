@@ -2,8 +2,10 @@
 
 pub mod approval;
 pub mod management;
+pub mod mcp_approval;
 mod operator_web;
 pub mod service;
+pub mod task_recipe;
 
 use std::{
     collections::HashMap,
