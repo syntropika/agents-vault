@@ -20,7 +20,7 @@ use avd::{
 };
 use clap::{Parser, Subcommand};
 use directories::ProjectDirs;
-use rcgen::{BasicConstraints, CertificateParams, IsCa, Issuer, KeyPair};
+use rcgen::{BasicConstraints, CertificateParams, DnType, IsCa, Issuer, KeyPair};
 use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer};
 use rustls::{ClientConfig, RootCertStore, ServerConfig};
 #[cfg(unix)]
@@ -835,13 +835,19 @@ fn preview_certificate(host: &str) -> Result<(Arc<ServerConfig>, String)> {
     let mut ca_params =
         CertificateParams::new(Vec::<String>::new()).context("cannot configure preview CA")?;
     ca_params.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
+    ca_params
+        .distinguished_name
+        .push(DnType::CommonName, "AV preview interception CA");
     let ca_key = KeyPair::generate().context("cannot create preview CA key")?;
     let ca_cert = ca_params
         .self_signed(&ca_key)
         .context("cannot create preview CA")?;
 
-    let leaf_params =
+    let mut leaf_params =
         CertificateParams::new(vec![host.to_owned()]).context("invalid preview proxy host")?;
+    leaf_params
+        .distinguished_name
+        .push(DnType::CommonName, host);
     let leaf_key = KeyPair::generate().context("cannot create preview leaf key")?;
     let issuer = Issuer::from_params(&ca_params, &ca_key);
     let leaf_cert = leaf_params
@@ -1714,6 +1720,51 @@ mod tests {
                 .to_string()
                 .contains("multiple secret-backed")
         );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn preview_certificate_is_trusted_by_curl() {
+        let directory = tempfile::tempdir().unwrap();
+        let (tls, ca_pem) = preview_certificate("api.example.test").unwrap();
+        let ca_path = directory.path().join("ca.pem");
+        fs::write(&ca_path, ca_pem).unwrap();
+        let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let server = tokio::spawn(async move {
+            let (socket, _) = listener.accept().await.unwrap();
+            let Ok(mut stream) = TlsAcceptor::from(tls).accept(socket).await else {
+                return;
+            };
+            let mut request = Vec::new();
+            while !request.ends_with(b"\r\n\r\n") {
+                assert!(request.len() < 4096);
+                let mut byte = [0];
+                stream.read_exact(&mut byte).await.unwrap();
+                request.push(byte[0]);
+            }
+            stream
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok")
+                .await
+                .unwrap();
+            stream.shutdown().await.unwrap();
+        });
+        let output = AsyncCommand::new("curl")
+            .args(["--disable", "--silent", "--show-error", "--max-time", "5"])
+            .arg("--cacert")
+            .arg(ca_path)
+            .args(["--noproxy", "*", "--resolve"])
+            .arg(format!("api.example.test:{port}:127.0.0.1"))
+            .arg(format!("https://api.example.test:{port}/"))
+            .output()
+            .await
+            .expect("curl is required for the TLS interoperability regression test");
+        server.await.unwrap();
+        assert!(
+            output.status.success(),
+            "curl rejected the preview certificate: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(output.stdout, b"ok");
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
