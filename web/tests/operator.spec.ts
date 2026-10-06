@@ -6,6 +6,7 @@ import AxeBuilder from '@axe-core/playwright';
 test('real operator workflow keeps secrets out of reviews and adapts to its viewport', async ({
   page,
 }, info) => {
+  test.setTimeout(90000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   const response = await page.goto('/');
@@ -28,7 +29,7 @@ test('real operator workflow keeps secrets out of reviews and adapts to its view
   await page.getByRole('button', { name: /example\/build/ }).click();
   await expect(page.getByRole('heading', { name: 'example/build' })).toBeVisible();
   await page.screenshot({
-    path: join(process.env['AV_WEB_CAPTURES'] ?? tmpdir(), `av-${info.project.name}-final.png`),
+    path: join(process.env['AV_WEB_CAPTURE_ROOT'] ?? tmpdir(), `av-${info.project.name}-final.png`),
     fullPage: true,
   });
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
@@ -59,6 +60,56 @@ test('real operator workflow keeps secrets out of reviews and adapts to its view
   await page.getByRole('button', { name: 'Replace credential' }).click();
   await page.getByRole('button', { name: new RegExp(name) }).click();
   await expect(page.getByText('v2', { exact: true })).toBeVisible();
+  const ca = process.env['AV_MCP_TEST_CA'];
+  if (!ca) throw new Error('Set AV_MCP_TEST_CA to the disposable test server CA');
+  await page.getByRole('button', { name: 'Actions', exact: true }).click();
+  await page.getByLabel('Credential', { exact: true }).selectOption(name);
+  await expect(page.locator('.task-destination strong')).toHaveText('api.test.example.test');
+  for (const tab of await page.locator('.segmented-nav button').all()) {
+    const bounds = await tab.boundingBox();
+    expect(bounds).not.toBeNull();
+    if (bounds)
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(page.viewportSize()?.width ?? 0);
+  }
+  await page.getByLabel('Executable', { exact: true }).fill('/usr/bin/true');
+  await page.getByLabel('Maximum seconds').fill('25');
+  await page.getByLabel('Maximum requests').fill('4');
+  await page.getByLabel('Maximum connections').fill('2');
+  const destination = page.locator('details.task-transport');
+  if ((await destination.getAttribute('open')) === null)
+    await destination.getByText('Test destination', { exact: true }).click();
+  await page.getByLabel('Local server address').fill('127.0.0.1:19443');
+  await page.getByLabel('Server CA file').fill(ca);
+  await page.getByRole('button', { name: /^(Create action|Save action)$/u }).click();
+  await expect(
+    page.getByText('Action saved. Grant its credential permission before enabling actions.'),
+  ).toBeVisible();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  const capture = process.env['AV_WEB_CAPTURE_ROOT'];
+  if (capture)
+    await page.screenshot({
+      path: join(capture, `task-editor-${info.project.name}.png`),
+      fullPage: true,
+    });
+  await page.getByRole('button', { name: 'Permissions', exact: true }).click();
+  await page.getByRole('button', { name: new RegExp(name) }).click();
+  await page.getByRole('button', { name: 'Edit permissions', exact: true }).click();
+  await page.getByRole('button', { name: 'Grant configured action', exact: true }).click();
+  await expect(
+    page.getByText('Configured action granted. Each run requires approval.'),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Actions', exact: true }).click();
+  await page.getByLabel('Maximum requests').fill('5');
+  await page.getByRole('button', { name: 'Save action', exact: true }).click();
+  await expect(
+    page.getByText('Action saved. Grant its credential permission before enabling actions.'),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Credentials', exact: true }).click();
+  await page.getByRole('button', { name: new RegExp(name) }).click();
+  await expect(page.getByText('No access granted', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Disconnect credential', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm disconnect', exact: true }).click();
   await page.getByRole('button', { name: 'Approvals', exact: true }).click();

@@ -29,7 +29,7 @@ const RequestStateSchema = Schema.Union([
     approved: Schema.Struct({ expires_at: Schema.Number, remaining: Schema.Number }),
   }),
 ]);
-const ReviewSchema = Schema.Struct({
+export const ReviewSchema = Schema.Struct({
   id: Schema.String,
   operation: Schema.Struct({
     connection: Schema.String,
@@ -63,9 +63,39 @@ export type Status = typeof StatusSchema.Type;
 const SessionSchema = Schema.Struct({ csrf: Schema.String, expires_in: Schema.Number });
 const ConnectionsSchema = Schema.Struct({ connections: Schema.Array(ConnectionSchema) });
 const ReviewsSchema = Schema.Struct({ requests: Schema.Array(ReviewSchema) });
+const McpSessionsSchema = Schema.Struct({
+  sessions: Schema.Array(
+    Schema.Struct({
+      id: Schema.String,
+      authorized: Schema.Boolean,
+      expires_in: Schema.Number,
+    }),
+  ),
+});
+export type McpSessions = typeof McpSessionsSchema.Type;
 const OkSchema = Schema.Struct({ ok: Schema.Boolean });
 const MutationSchema = Schema.Struct({ action: Schema.String });
 const DecisionSchema = Schema.Struct({ state: RequestStateSchema });
+
+export const TaskRecipeSchema = Schema.Struct({
+  connection: Schema.String,
+  connection_version: Schema.NullOr(Schema.Number),
+  host: Schema.String,
+  command: Schema.Array(Schema.String),
+  max_connects: Schema.Number,
+  max_requests: Schema.Number,
+  max_runtime_seconds: Schema.Number,
+  upstream_addr: Schema.String,
+  upstream_ca_der: Schema.String,
+});
+export type TaskRecipe = typeof TaskRecipeSchema.Type;
+const TaskSchema = Schema.Struct({
+  recipe: Schema.NullOr(TaskRecipeSchema),
+  revision: Schema.NullOr(Schema.String),
+  editable: Schema.Boolean,
+  capacity: Schema.Number,
+});
+export type TaskConfiguration = typeof TaskSchema.Type;
 
 export class ApiError extends Data.TaggedError('ApiError')<{
   readonly status: number;
@@ -186,6 +216,22 @@ export class OperatorApi {
       id: record.id,
       expected_version: record.version,
       ...(value === undefined ? {} : { value }),
+    });
+  }
+  mcpSessions() {
+    return this.request('mcp', McpSessionsSchema);
+  }
+  enrollMcp(pairing_id: string, approve: boolean) {
+    return this.request('mcp', OkSchema, { pairing_id, approve });
+  }
+  task() {
+    return this.request('manage', TaskSchema, { action: 'task_show' });
+  }
+  saveTask(recipe: TaskRecipe, revision: string | null) {
+    return this.request('manage', TaskSchema, {
+      action: 'task_save',
+      expected_revision: revision,
+      recipe,
     });
   }
   requests() {

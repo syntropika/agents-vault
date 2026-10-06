@@ -892,3 +892,154 @@ label {
 :root[data-theme='light'] .segmented-nav button:hover:not([aria-current='page']) {
   background: var(--hover);
 }
+
+.task-editor > p {
+  margin-block: 12px 24px;
+}
+.task-editor fieldset {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.task-editor label {
+  display: block;
+  margin-block: 16px 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.task-editor input,
+.task-editor textarea,
+.task-editor select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--subtle);
+  color: var(--text);
+  font: inherit;
+}
+.task-editor textarea {
+  resize: vertical;
+}
+.task-editor :disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.task-limits {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.task-transport {
+  margin-block: 24px;
+}
+.task-transport summary {
+  cursor: pointer;
+  padding: 6px 0;
+}
+@media (max-width: 600px) {
+  .task-limits {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+.mcp-approval {
+  max-width: 760px;
+  padding: 24px;
+  margin-inline: auto;
+}
+.mcp-approval h1 {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+.mcp-approval h2 {
+  margin-block: 24px 12px;
+  font-size: 17px;
+}
+.mcp-id {
+  display: block;
+  padding-block: 16px;
+  overflow-wrap: anywhere;
+}
+.mcp-review {
+  margin-block: 24px;
+}
+.mcp-review > div {
+  padding-block: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.mcp-review dt {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.mcp-review dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.mcp-review pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0;
+  font-size: 13px;
+}
+@media (max-width: 600px) {
+  .mcp-approval {
+    padding: 16px;
+  }
+}
+
+.mcp-sessions {
+  margin-block: 24px 32px;
+}
+.mcp-sessions h3 {
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+.mcp-session {
+  margin-top: 16px;
+  padding-block: 16px;
+  border-top: 1px solid var(--border);
+}
+.mcp-session code {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+.task-arguments > button {
+  margin-top: 16px;
+}
+.argument-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.argument-row textarea {
+  flex: 1;
+  min-width: 0;
+}
+.argument-row button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .segmented-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    border-radius: 18px;
+    gap: 2px;
+  }
+  .segmented-nav button {
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+}
+
+.task-destination {
+  display: grid;
+  gap: 4px;
+  margin-block: 10px 16px;
+  overflow-wrap: anywhere;
+}

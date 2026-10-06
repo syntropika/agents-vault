@@ -24,14 +24,18 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ApiError, OperatorApi } from './api';
+import { TaskEditor } from './TaskEditor';
+import { McpSessionsPanel } from './McpSessionsPanel';
+import type { McpSessions, TaskConfiguration } from './api';
 import type { Connection, Detail, Review, Status } from './api';
 
-type View = 'credentials' | 'permissions' | 'approvals' | 'settings';
+type View = 'credentials' | 'permissions' | 'approvals' | 'tasks' | 'settings';
 type Editor = 'add' | 'rotate' | 'permissions' | 'disconnect' | null;
 const navigation: readonly { id: View; label: string }[] = [
   { id: 'credentials', label: 'Credentials' },
   { id: 'permissions', label: 'Permissions' },
   { id: 'approvals', label: 'Approvals' },
+  { id: 'tasks', label: 'Actions' },
   { id: 'settings', label: 'Settings' },
 ];
 function Icon({ icon: Component }: { icon: LucideIcon }) {
@@ -93,6 +97,8 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
   const [records, setRecords] = useState<readonly Connection[]>([]);
   const [selected, setSelected] = useState<Detail | null>(null);
   const [requests, setRequests] = useState<readonly Review[]>([]);
+  const [mcp, setMcp] = useState<McpSessions>({ sessions: [] });
+  const [task, setTask] = useState<TaskConfiguration | null>(null);
   const [search, setSearch] = useState('');
   const [editor, setEditor] = useState<Editor>(null);
   const selection = useRef(0);
@@ -156,15 +162,21 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
       const status = yield* api.status();
       const records = status.locked ? (yield* api.connections()).connections : null;
       const requests = (yield* api.requests()).requests;
-      return { status, records, requests };
+      const task = status.locked ? yield* api.task() : null;
+      const mcp = yield* api.mcpSessions();
+      return { status, records, requests, task, mcp };
     });
   }
   function applySnapshot(result: {
     status: Status;
     records: readonly Connection[] | null;
     requests: readonly Review[];
+    task: TaskConfiguration | null;
+    mcp: McpSessions;
   }) {
     setStatus(result.status);
+    setTask(result.task);
+    setMcp(result.mcp);
     if (result.records) setRecords(result.records);
     setRequests(result.requests);
   }
@@ -235,7 +247,7 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
     if (editor === 'add' && typeof id === 'string' && typeof host === 'string')
       mutation(
         api.add(id, host, value),
-        'Credential added. Configure its permitted task before use.',
+        'Credential added. Configure its permitted action before use.',
       );
     else if (editor === 'rotate' && selected)
       mutation(
@@ -326,8 +338,10 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                   : view === 'permissions'
                     ? 'Decide where and how a credential can be used.'
                     : view === 'approvals'
-                      ? 'Review the exact task before granting access.'
-                      : 'Manage your local vault and workspace.'}
+                      ? 'Review the exact action before granting access.'
+                      : view === 'tasks'
+                        ? 'Configure the exact command and its access limits.'
+                        : 'Manage your local vault and workspace.'}
               </p>
             </div>
             <div className="heading-actions">
@@ -383,7 +397,7 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                 <h2>Make access intentional.</h2>
                 <p>
                   Keep credentials local. Choose their destination, control their use, and approve
-                  tasks when they need access.
+                  actions when they need access.
                 </p>
                 <div className="locked-features">
                   <span>
@@ -396,7 +410,7 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                   </span>
                   <span>
                     <Icon icon={FileKey2} />
-                    Separate task approvals
+                    Separate action approvals
                   </span>
                 </div>
               </div>
@@ -427,7 +441,7 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                   </button>
                 </form>
                 <p className="fine-print">
-                  Unlocking the operator interface does not approve a task.
+                  Unlocking the operator interface does not approve an action.
                 </p>
               </section>
             </div>
@@ -444,7 +458,8 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                     <div className="feedback" role="status">
                       <Icon icon={LockKeyhole} />
                       <span>
-                        Task execution is enabled. Pause it in Settings before editing credentials.
+                        Action execution is enabled. Pause it in Settings before editing
+                        credentials.
                       </span>
                     </div>
                   )}
@@ -615,7 +630,7 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                             <Setting
                               icon={ArrowRight}
                               title="Delivery"
-                              description="How the configured task receives access."
+                              description="How the configured action receives access."
                             >
                               {grant
                                 ? grant.request.delivery === 'direct'
@@ -626,7 +641,7 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                             <Setting
                               icon={ShieldCheck}
                               title="Approval"
-                              description="When a task needs your confirmation."
+                              description="When an action needs your confirmation."
                             >
                               {grant
                                 ? grant.approval === 'every_run'
@@ -636,8 +651,8 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                             </Setting>
                             <Setting
                               icon={TerminalSquare}
-                              title="Permitted task"
-                              description="Only an operator-configured task can be granted."
+                              title="Permitted action"
+                              description="Only an operator-configured action can be granted."
                             >
                               <span>
                                 {grant
@@ -651,11 +666,11 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                               className="inline-permissions"
                               aria-labelledby="permissions-title"
                             >
-                              <h3 id="permissions-title">Task permissions</h3>
+                              <h3 id="permissions-title">Action permissions</h3>
                               <p>
-                                Grant the broker’s configured task for this host and version. It
-                                will require approval on every run. A mismatched or missing task is
-                                refused.
+                                Grant the broker’s configured action for this host and version. It
+                                will require approval on every run. A mismatched or missing action
+                                is refused.
                               </p>
                               <div className="editor-actions">
                                 <button
@@ -665,11 +680,11 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                                   onClick={() => {
                                     mutation(
                                       api.change('connect_grant', connection),
-                                      'Configured task granted. Each run requires approval.',
+                                      'Configured action granted. Each run requires approval.',
                                     );
                                   }}
                                 >
-                                  Grant configured task
+                                  Grant configured action
                                 </button>
                                 <button
                                   type="button"
@@ -778,7 +793,7 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                         >
                           {records.length
                             ? 'Select a credential to inspect its destination and permitted use.'
-                            : 'Add your first credential. Its value stays out of lists and task reviews.'}
+                            : 'Add your first credential. Its value stays out of lists and action reviews.'}
                         </Empty>
                       )}
                     </section>
@@ -786,10 +801,10 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                 </>
               )}
               {view === 'approvals' && (
-                <section className="approval-list" aria-label="Task approvals">
+                <section className="approval-list" aria-label="Action approvals">
                   {requests.length === 0 ? (
                     <Empty icon={ShieldCheck} title="No requests to review">
-                      Enable task execution in Settings. New requests from av or MCP will appear
+                      Enable action execution in Settings. New requests from av or MCP will appear
                       here. Refresh to check for changes.
                     </Empty>
                   ) : (
@@ -837,19 +852,19 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                             onClick={() => {
                               mutation(
                                 api.decide(request, true),
-                                'Task approved for one execution attempt within 60 seconds.',
+                                'Action approved for one execution attempt within 60 seconds.',
                               );
                             }}
                           >
                             <Icon icon={Check} />
-                            Approve task
+                            Approve action
                           </button>
                           <button
                             className="button secondary"
                             type="button"
                             disabled={busy || request.state !== 'pending'}
                             onClick={() => {
-                              mutation(api.decide(request, false), 'Task denied.');
+                              mutation(api.decide(request, false), 'Action denied.');
                             }}
                           >
                             <Icon icon={X} />
@@ -865,17 +880,43 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                   )}
                 </section>
               )}
+              {view === 'tasks' && (
+                <TaskEditor
+                  key={task?.revision ?? 'new'}
+                  configuration={task}
+                  records={records}
+                  disabled={busy || !isLocked}
+                  onSave={(recipe) => {
+                    mutation(
+                      api.saveTask(recipe, task?.revision ?? null),
+                      'Action saved. Grant its credential permission before enabling actions.',
+                    );
+                  }}
+                />
+              )}
               {view === 'settings' && (
                 <section className="workspace-settings">
                   <h2>Local workspace</h2>
+                  <McpSessionsPanel
+                    sessions={mcp.sessions}
+                    disabled={busy || isLocked}
+                    onDecision={(id, approve) => {
+                      mutation(
+                        api.enrollMcp(id, approve),
+                        approve
+                          ? 'MCP session connected for 15 minutes. Decisions are trusted to this harness.'
+                          : 'MCP session disconnected.',
+                      );
+                    }}
+                  />
                   <div className="settings-group">
                     <Setting
                       icon={LockKeyhole}
-                      title="Task execution"
+                      title="Action execution"
                       description={
                         isLocked
-                          ? 'Credentials can be managed while tasks are paused.'
-                          : 'New tasks can request approval.'
+                          ? 'Credentials can be managed while actions are paused.'
+                          : 'New actions can request approval.'
                       }
                     >
                       <button
@@ -895,12 +936,12 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                               setSelected(null);
                               setRequests([]);
                               setStatus(null);
-                              setNotice('Task execution paused. Sign in to manage credentials.');
+                              setNotice('Action execution paused. Sign in to manage credentials.');
                             });
                           }
                         }}
                       >
-                        {isLocked ? 'Enable tasks' : 'Pause and lock'}
+                        {isLocked ? 'Enable actions' : 'Pause and lock'}
                       </button>
                     </Setting>
                     <Setting
@@ -940,7 +981,7 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
             <Icon icon={LockKeyhole} />
             Local vault
           </span>
-          <span>Credentials stay out of task reviews.</span>
+          <span>Credentials stay out of action reviews.</span>
         </footer>
       </div>
     </div>

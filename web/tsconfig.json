@@ -20,5 +20,5 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"]
   },
-  "include": ["src", "vite.config.ts", "playwright.config.ts", "tests"]
+  "include": ["src", "vite.config.ts", "playwright.config.ts", "tests", "vite.mcp.config.ts"]
 }
