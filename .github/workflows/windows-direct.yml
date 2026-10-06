@@ -1,0 +1,51 @@
+name: Windows direct CLI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  direct-cli:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    env:
+      RUSTFLAGS: '-C target-feature=+crt-static'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Rust toolchain
+        shell: pwsh
+        run: rustup default stable
+      - name: Build and test direct-mode crates
+        shell: pwsh
+        run: cargo test --locked -p av-core -p av --all-targets
+      - name: Build the offline CLI
+        shell: powershell
+        run: cargo build --locked --release --target x86_64-pc-windows-msvc -p av
+      - name: Verify offline package lifecycle in Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          .\packaging\windows\test-package.ps1 -Binary .\target\x86_64-pc-windows-msvc\release\av.exe
+      - name: Parse native interactive secret journey
+        shell: powershell
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path .\packaging\windows\test-direct-console.ps1).Path, [ref] $tokens, [ref] $errors) | Out-Null
+          if ($errors.Count -ne 0) { throw $errors[0].Message }
+          Write-Host 'Interactive console journey parsed. Human-run native console gate remains open.'
+      - name: Prepare unsigned review artifact
+        shell: powershell
+        run: |
+          $metadata = cargo metadata --locked --no-deps --format-version 1 | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $version = ($metadata.packages | Where-Object { $_.name -eq 'av' }).version
+          .\packaging\windows\make-package.ps1 -Binary .\target\x86_64-pc-windows-msvc\release\av.exe -Version $version -OutputDirectory "$env:RUNNER_TEMP\agents-vault-packages"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agents-vault-windows-x64-unsigned
+          path: ${{ runner.temp }}/agents-vault-packages/agents-vault-*
+          if-no-files-found: error

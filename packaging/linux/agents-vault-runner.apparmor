@@ -1,0 +1,8 @@
+abi <abi/4.0>,
+include <tunables/global>
+
+# Namespace creation is explicitly permitted for the installed service only.
+# The helper enforces mount, PID, network, capability, and syscall confinement.
+profile agents-vault-runner /usr/libexec/agents-vault/av-runner-service flags=(unconfined) {
+    userns,
+}

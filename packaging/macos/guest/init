@@ -1,0 +1,18 @@
+#!/bin/busybox sh
+set -eu
+/bin/busybox mount -t proc proc /proc
+/bin/busybox mount -t sysfs sysfs /sys
+/bin/busybox mount -t devtmpfs devtmpfs /dev
+/bin/busybox mkdir -p /run
+/bin/busybox mount -t tmpfs -o mode=755 tmpfs /run
+/bin/busybox ip link set lo up
+module_dir=/lib/modules/6.12.110-0-virt/kernel/net/vmw_vsock
+/bin/busybox insmod "$module_dir/vsock.ko"
+/bin/busybox insmod "$module_dir/vmw_vsock_virtio_transport_common.ko"
+/bin/busybox insmod "$module_dir/vmw_vsock_virtio_transport.ko"
+/bin/busybox insmod /lib/modules/6.12.110-0-virt/kernel/drivers/char/hw_random/rng-core.ko
+/bin/busybox insmod /lib/modules/6.12.110-0-virt/kernel/drivers/char/hw_random/virtio-rng.ko
+/usr/bin/av-guest || true
+/bin/busybox poweroff -f
+# PID 1 must never exit if poweroff fails.
+while :; do /bin/busybox sleep 60; done

@@ -1,0 +1,42 @@
+[Unit]
+Description=Agents Vault synthetic broker
+After=network.target agents-vault-runner.service
+Requires=agents-vault-runner.service
+
+[Service]
+Type=simple
+User=av-broker
+Group=av-broker
+ExecStart=/usr/libexec/agents-vault/avd
+WorkingDirectory=/
+Environment=AVD_RUNTIME_DIR=/run/agents-vault
+Environment=AVD_APPROVAL_UI=1
+EnvironmentFile=/etc/agents-vault/identity.env
+EnvironmentFile=-/etc/agents-vault/service.env
+RuntimeDirectory=agents-vault
+RuntimeDirectoryMode=0755
+StateDirectory=agents-vault
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=user mnt pid net
+SystemCallArchitectures=native
+LockPersonality=yes
+KillMode=control-group
+TimeoutStopSec=5
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

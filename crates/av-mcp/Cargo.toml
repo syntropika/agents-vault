@@ -1,0 +1,21 @@
+[package]
+name = "av-mcp"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+
+[dependencies]
+avd = { path = "../avd" }
+rmcp = { version = "3.5", features = ["transport-io", "elicitation", "client"] }
+schemars = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "io-util"] }
+uuid = { version = "1", features = ["serde"] }
+
+[dev-dependencies]
+hyper = { version = "0.14", features = ["client", "tcp", "http1"] }
+libc = "0.2"
+av-core = { path = "../av-core" }
+rcgen = "0.14"
+tempfile = "3"

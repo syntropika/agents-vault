@@ -1,0 +1,10 @@
+[Unit]
+Description=Disposable Agents Vault systemd lifecycle test
+After=basic.target apparmor.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /boundary-tests/test_systemd_lifecycle.py
+StandardOutput=journal+console
+StandardError=journal+console
+TimeoutStartSec=15min

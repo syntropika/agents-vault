@@ -1,0 +1,8 @@
+FROM ubuntu:24.04
+RUN apt-get update && apt-get install -y --no-install-recommends python3 systemd apparmor && rm -rf /var/lib/apt/lists/*
+COPY . /boundary-tests
+# The test checks the unit and starts avd under its real service UID. A systemd
+# boot in Docker is deliberately not represented by this daemon-reload stub.
+RUN mkdir /test-bin && printf '#!/bin/sh\n[ "$1" = daemon-reload ] || [ "$1" = disable ]\n' > /test-bin/systemctl && chmod 755 /test-bin/systemctl
+ENV PATH=/test-bin:/usr/sbin:/usr/bin:/sbin:/bin
+CMD ["python3", "/boundary-tests/test_service_boundary.py"]

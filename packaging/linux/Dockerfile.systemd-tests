@@ -1,0 +1,14 @@
+# The executor runs QEMU without KVM or privileged host access.
+FROM ubuntu:24.04 AS executor
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    qemu-system-x86 e2fsprogs python3 && rm -rf /var/lib/apt/lists/*
+
+# This filesystem boots under its own guest kernel and systemd PID 1.
+FROM ubuntu:24.04 AS guest
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    systemd-sysv dbus python3 apparmor openssl sudo strace initramfs-tools linux-image-virtual && rm -rf /var/lib/apt/lists/*
+COPY . /boundary-tests
+RUN mkdir -p /etc/systemd/system/multi-user.target.wants && \
+    ln -s /boundary-tests/systemd-boundary-test.service /etc/systemd/system/systemd-boundary-test.service && \
+    ln -s ../systemd-boundary-test.service /etc/systemd/system/multi-user.target.wants/systemd-boundary-test.service && \
+    touch /boundary-tests/.disposable-vm

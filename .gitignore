@@ -1,0 +1,14 @@
+/target/
+*.av.db
+*.av.db-*
+*.av.keys.json
+/web/node_modules/
+/web/dist/
+/web/coverage/
+/web/playwright-report/
+/web/test-results/
+
+/web/*.tsbuildinfo
+/.impeccable/review
+/.impeccable/build/
+/.impeccable/questions/

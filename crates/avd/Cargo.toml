@@ -1,0 +1,33 @@
+[package]
+name = "avd"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1"
+av-core = { path = "../av-core" }
+av-proxy = { path = "../av-proxy" }
+hex = "0.4"
+hyper = { version = "0.14", features = ["http1", "server", "tcp"] }
+libc = "0.2"
+rand = "0.9"
+rcgen = "0.14"
+rustls = "0.23"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+subtle = "2"
+tempfile = "3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "io-util", "process", "sync", "signal", "time"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+zeroize = "1"
+
+[dev-dependencies]
+hyper = { version = "0.14", features = ["client", "tcp", "http1"] }
+tokio-rustls = "0.26"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+av-runner = { path = "../av-runner" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+av-vmm = { path = "../av-vmm" }

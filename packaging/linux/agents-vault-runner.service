@@ -1,0 +1,38 @@
+[Unit]
+Description=Agents Vault isolated runner
+Before=agents-vault.service
+
+[Service]
+Type=notify
+NotifyAccess=main
+TimeoutStartSec=10
+User=av-runner
+Group=av-runner
+ExecStart=/usr/libexec/agents-vault/av-runner-service
+RuntimeDirectory=agents-vault-runner
+RuntimeDirectoryMode=0755
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateNetwork=yes
+PrivateDevices=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+# Do not mask /proc: an unprivileged child must mount a fresh private procfs.
+# Kernel writes still require host capabilities; deny log/hostname syscalls.
+SystemCallFilter=~syslog sethostname setdomainname
+SystemCallErrorNumber=EPERM
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=user mnt pid net
+SystemCallArchitectures=native
+LockPersonality=yes
+KillMode=control-group
+TimeoutStopSec=5
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

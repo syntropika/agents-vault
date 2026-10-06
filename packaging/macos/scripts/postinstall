@@ -1,0 +1,82 @@
+#!/bin/sh
+# Installer creates identities but leaves the supervisor explicitly disabled.
+set -eu
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+export PATH
+[ "$(id -u)" = 0 ] || exit 1
+[ "${3:-/}" = / ] || exit 1
+created_users=''
+created_groups=''
+complete=false
+cleanup() {
+    if [ "$complete" != true ]; then
+        for name in $created_users; do dscl . -delete "/Users/$name" || :; done
+        for name in $created_groups; do dscl . -delete "/Groups/$name" || :; done
+        echo 'Provisioning failed; package files may remain. Service was not enabled.' >&2
+    fi
+}
+trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
+next_id=400
+for name in _avd _avrunner; do
+    if dscl . -read "/Users/$name" >/dev/null 2>&1 || dscl . -read "/Groups/$name" >/dev/null 2>&1; then
+        echo "Refusing existing service identity: $name" >&2; exit 1
+    fi
+    while :; do
+        [ "$next_id" -lt 500 ] || { echo 'No free service UID/GID in 400..499' >&2; exit 1; }
+        user_match=$(dscl . -list /Users UniqueID | awk -v value="$next_id" '$NF == value { print $1 }')
+        group_match=$(dscl . -list /Groups PrimaryGroupID | awk -v value="$next_id" '$NF == value { print $1 }')
+        directory_user=$(dscacheutil -q user -a uid "$next_id")
+        directory_group=$(dscacheutil -q group -a gid "$next_id")
+        if [ -z "$user_match$group_match$directory_user$directory_group" ]; then break; fi
+        next_id=$((next_id + 1))
+    done
+    dscl . -create "/Groups/$name"
+    created_groups="$created_groups $name"
+    dscl . -create "/Groups/$name" PrimaryGroupID "$next_id"
+    dscl . -create "/Groups/$name" Password '*'
+    dscl . -create "/Users/$name"
+    created_users="$created_users $name"
+    dscl . -create "/Users/$name" UniqueID "$next_id"
+    dscl . -create "/Users/$name" PrimaryGroupID "$next_id"
+    dscl . -create "/Users/$name" GeneratedUID "$(uuidgen)"
+    dscl . -create "/Users/$name" RealName "Agents Vault $name service"
+    dscl . -create "/Users/$name" NFSHomeDirectory /var/empty
+    dscl . -create "/Users/$name" UserShell /usr/bin/false
+    dscl . -create "/Users/$name" IsHidden 1
+    dscl . -create "/Users/$name" Password '*'
+    dscl . -create "/Users/$name" AuthenticationAuthority ';DisabledUser;'
+    # Abort if an allocation collided with another Directory Services writer.
+    [ "$(dscl . -list /Users UniqueID | awk -v value="$next_id" '$NF == value { n++ } END { print n }')" = 1 ] || exit 1
+    [ "$(dscl . -list /Groups PrimaryGroupID | awk -v value="$next_id" '$NF == value { n++ } END { print n }')" = 1 ] || exit 1
+    next_id=$((next_id + 1))
+done
+app=/Library/PrivilegedHelperTools/AgentsVault.app
+state=/private/var/db/agents-vault
+chown -R root:wheel "$app"
+chmod -RN "$app"
+find "$app" -type d -exec chmod 755 {} +
+find "$app" -type f -exec chmod go-w {} +
+install -d -o root -g wheel -m 755 "$state"
+install -d -o root -g _avd -m 750 "$state/run"
+install -d -o _avd -g _avd -m 700 "$state/broker"
+install -d -o _avd -g _avd -m 700 "$state/broker/runtime"
+install -d -o _avd -g wheel -m 755 "$state/agent"
+chmod -N "$state" "$state/run" "$state/broker" "$state/broker/runtime" "$state/agent"
+{
+    printf '%s\n' 'format=1'
+    for name in _avd _avrunner; do
+        printf '%s_uid=%s\n' "$name" "$(id -u "$name")"
+        printf '%s_gid=%s\n' "$name" "$(id -g "$name")"
+        printf '%s_guid=%s\n' "$name" "$(dscl . -read "/Users/$name" GeneratedUID | awk '{print $2}')"
+    done
+} > "$state/identities"
+chown root:wheel "$state/identities"
+chmod 600 "$state/identities"
+for label in dev.agentsvault.supervisor dev.agentsvault.broker; do
+    chown root:wheel "/Library/LaunchDaemons/$label.plist"
+    chmod 644 "/Library/LaunchDaemons/$label.plist"
+    launchctl disable "system/$label"
+done
+complete=true
+echo 'Agents Vault identities and disabled services installed. Provision the synthetic vault/policy and configure the agent UID before starting the locked broker.'

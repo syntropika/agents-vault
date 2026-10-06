@@ -1,0 +1,25 @@
+#!/bin/sh
+# Fresh installations only. Atomic updates and rollback remain release gates.
+set -eu
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+export PATH
+[ "$(id -u)" = 0 ] || exit 1
+[ "${3:-/}" = / ] || { echo 'Only the boot volume is supported' >&2; exit 1; }
+for path in /Library/PrivilegedHelperTools/AgentsVault.app /private/var/db/agents-vault /Library/LaunchDaemons/dev.agentsvault.supervisor.plist /Library/LaunchDaemons/dev.agentsvault.broker.plist /usr/local/bin/av; do
+    if [ -e "$path" ] || [ -L "$path" ]; then
+        echo "Fresh installation required; refusing existing path: $path" >&2
+        exit 1
+    fi
+done
+for name in _avd _avrunner; do
+    if dscl . -read "/Users/$name" >/dev/null 2>&1 || dscl . -read "/Groups/$name" >/dev/null 2>&1; then
+        echo "Refusing existing service identity: $name" >&2
+        exit 1
+    fi
+done
+for path in /Library /Library/PrivilegedHelperTools /private /private/var /private/var/db /Library/LaunchDaemons; do
+    [ -d "$path" ] && [ ! -L "$path" ] && [ "$(stat -f %u "$path")" = 0 ] || exit 1
+    # Check effective write access, including an ACL, in the installed supervisor.
+    mode=$(stat -f %Lp "$path")
+    [ "$((0$mode & 0022))" = 0 ] || { echo "Unsafe installation ancestor: $path" >&2; exit 1; }
+done

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+    <key>Label</key><string>dev.agentsvault.supervisor</string>
+    <key>ProgramArguments</key><array><string>/Library/PrivilegedHelperTools/AgentsVault.app/Contents/MacOS/av-supervisor</string></array>
+    <key>UserName</key><string>root</string>
+    <key>GroupName</key><string>wheel</string>
+    <key>Disabled</key><true/>
+    <key>RunAtLoad</key><true/>
+    <key>KeepAlive</key><true/>
+    <key>ProcessType</key><string>Background</string>
+    <key>WorkingDirectory</key><string>/var/empty</string>
+    <key>Umask</key><integer>63</integer>
+    <key>ThrottleInterval</key><integer>10</integer>
+    <key>ExitTimeOut</key><integer>10</integer>
+    <key>AbandonProcessGroup</key><false/>
+    <key>HardResourceLimits</key><dict><key>Core</key><integer>0</integer></dict>
+</dict></plist>

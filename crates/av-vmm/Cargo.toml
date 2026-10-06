@@ -1,0 +1,30 @@
+[package]
+name = "av-vmm"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+libc = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+block2 = "0.6.2"
+objc2 = "0.6.3"
+objc2-foundation = "0.3.2"
+objc2-virtualization = "0.3.2"
+
+[dev-dependencies]
+tempfile = "3"
+rcgen = "0.14"
+
+[[bin]]
+name = "av-vmm"
+path = "src/main.rs"
+
+[[bin]]
+name = "av-guest"
+path = "src/bin/av-guest.rs"

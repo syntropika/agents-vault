@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+    <key>Label</key><string>dev.agentsvault.broker</string>
+    <key>ProgramArguments</key><array><string>/Library/PrivilegedHelperTools/AgentsVault.app/Contents/MacOS/avd</string></array>
+    <key>UserName</key><string>_avd</string>
+    <key>GroupName</key><string>_avd</string>
+    <key>Disabled</key><true/>
+    <key>RunAtLoad</key><true/>
+    <key>KeepAlive</key><true/>
+    <key>ProcessType</key><string>Background</string>
+    <key>WorkingDirectory</key><string>/var/empty</string>
+    <key>Umask</key><integer>63</integer>
+    <key>ThrottleInterval</key><integer>10</integer>
+    <key>ExitTimeOut</key><integer>10</integer>
+    <key>AbandonProcessGroup</key><false/>
+    <key>EnvironmentVariables</key><dict>
+        <key>AVD_MAC_SERVICE</key><string>1</string>
+        <key>AVD_APPROVAL_UI</key><string>1</string>
+        <key>AVD_RUNTIME_DIR</key><string>/private/var/db/agents-vault/broker/runtime</string>
+        <key>AVD_VAULT_PATH</key><string>/private/var/db/agents-vault/broker/vault.db</string>
+        <key>AVD_PROXY_POLICY_PATH</key><string>/private/var/db/agents-vault/broker/proxy-policy.json</string>
+    </dict>
+    <key>HardResourceLimits</key><dict><key>Core</key><integer>0</integer></dict>
+</dict></plist>
