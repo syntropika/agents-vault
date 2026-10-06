@@ -276,7 +276,7 @@ async fn dispatch(state: Arc<State>, mut request: Request<Body>) -> Response<Bod
         Ok(_) => response(
             StatusCode::OK,
             if decision.as_str() == "approve" {
-                "Request approved. Return to the client and resume this exact request."
+                "Request approved. The original waiting av run will execute automatically."
             } else {
                 "Request denied. The command cannot start."
             },
@@ -376,8 +376,9 @@ pub fn review_prompt(review: &Review) -> Result<String, String> {
     // JSON escaping keeps control characters in broker-owned fields from
     // changing the visual structure of the approval prompt.
     Ok(format!(
-        "Review this frozen proxy task?\nRequest ID: {}\nConnection: {}\nConnection version: {}\nAction: {}\nTarget host: {}\nCommand argv: {}\nMaximum CONNECT tunnels: {}\nMaximum HTTP requests: {}\nMaximum runtime: {} seconds",
+        "Review this frozen proxy task?\nRequest ID: {}\nExecution session: {}\nConnection: {}\nConnection version: {}\nAction: {}\nTarget host: {}\nCommand argv: {}\nMaximum CONNECT tunnels: {}\nMaximum HTTP requests: {}\nMaximum runtime: {} seconds",
         review.id,
+        review.execution_session,
         json_string(&operation.connection)?,
         policy
             .connection_version

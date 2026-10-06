@@ -1,4 +1,6 @@
 import { resolve } from 'node:path';
+import { createConnection } from 'node:net';
+import { randomUUID } from 'node:crypto';
 import { build } from 'rolldown';
 import { Client } from '@modelcontextprotocol/client';
 import type { CallToolRequest, CallToolResult } from '@modelcontextprotocol/client';
@@ -19,6 +21,7 @@ test('official App bridge approves and denies through the real Rust MCP adapter'
   const ca = process.env['AV_MCP_TEST_CA'];
   if (!socket || !ca)
     throw new Error('Set AV_MCP_TEST_SOCKET and AV_MCP_TEST_CA for the disposable broker');
+  const agentSocket = socket;
   const name = `mcp/${info.project.name}_${String(Date.now())}`;
   const api = page.context().request;
   const bootstrap = await api.get('/api/operator/bootstrap');
@@ -75,6 +78,7 @@ test('official App bridge approves and denies through the real Rust MCP adapter'
     command: resolve('../target/debug/av-mcp'),
     env: { AVD_AGENT_SOCKET: socket },
   });
+  const owners: ReturnType<typeof createConnection>[] = [];
   try {
     await client.connect(transport);
     const initial = await client.callTool({ name: 'connect_approval', arguments: {} });
@@ -83,6 +87,7 @@ test('official App bridge approves and denies through the real Rust MCP adapter'
     const beforeEnrollment = await client.callTool({
       name: 'request_proxy_task',
       arguments: {
+        request_id: randomUUID(),
         connection: name,
         connection_version: 1,
         host: recipe.host,
@@ -126,16 +131,50 @@ test('official App bridge approves and denies through the real Rust MCP adapter'
     ).toBe(true);
     await frame.getByRole('button', { name: 'Refresh connection' }).click();
     await expect(frame.getByRole('heading', { name: 'Session connected' })).toBeVisible();
-    const args = {
-      connection: name,
-      connection_version: 1,
-      host: recipe.host,
-      command: recipe.command,
-    };
+    async function liveRequest() {
+      const owner = createConnection(agentSocket);
+      owners.push(owner);
+      const requestId = await new Promise<string>((resolve, reject) => {
+        let frame = '';
+        owner.on('error', reject);
+        owner.on('data', (bytes) => {
+          frame += bytes.toString();
+          if (!frame.includes('\n')) return;
+          const result = JSON.parse(frame) as { ok: boolean; data?: { request_id: string } };
+          if (!result.ok || !result.data) reject(new Error('CLI request refused'));
+          else resolve(result.data.request_id);
+        });
+        owner.write(
+          JSON.stringify({
+            op: 'request',
+            operation: {
+              connection: name,
+              action: 'proxy.run',
+              target: recipe.host,
+              arguments: { command: recipe.command, connection_version: 1 },
+            },
+          }) + '\n',
+        );
+      });
+      return {
+        request_id: requestId,
+        connection: name,
+        connection_version: 1,
+        host: recipe.host,
+        command: recipe.command,
+      };
+    }
+    const args = await liveRequest();
     const request = await client.callTool({ name: 'request_proxy_task', arguments: args });
     const task = Schema.decodeUnknownSync(Reviewed)(request.structuredContent);
     await page.evaluate((result: CallToolResult) => window.avDeliverResult(result), request);
     await expect(frame.getByRole('heading', { name: 'Approve this action?' })).toBeVisible();
+    await expect(
+      frame.getByText(
+        'Approval lets the original waiting av run execute this action automatically.',
+        { exact: true },
+      ),
+    ).toBeVisible();
     await expect(frame.getByText('20 seconds · 3 requests · 2 connections')).toBeVisible();
     expect(await frame.locator('body').textContent()).not.toContain(
       'av-synthetic-mcp-browser-only',
@@ -148,7 +187,10 @@ test('official App bridge approves and denies through the real Rust MCP adapter'
       arguments: { request_id: task.review.id, review_digest: task.review_digest, approve: true },
     });
     expect(replay.isError).toBe(true);
-    const denied = await client.callTool({ name: 'request_proxy_task', arguments: args });
+    const denied = await client.callTool({
+      name: 'request_proxy_task',
+      arguments: await liveRequest(),
+    });
     await page.evaluate((result: CallToolResult) => window.avDeliverResult(result), denied);
     await frame.getByRole('button', { name: 'Deny', exact: true }).click();
     await expect(frame.getByText('denied', { exact: true })).toBeVisible();
@@ -178,6 +220,7 @@ test('official App bridge approves and denies through the real Rust MCP adapter'
         .isError,
     ).toBe(true);
   } finally {
+    for (const owner of owners) owner.destroy();
     await client.close();
     await api.post('/api/operator/lock', { headers, data: {} });
   }

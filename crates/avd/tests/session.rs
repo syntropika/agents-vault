@@ -146,7 +146,11 @@ async fn admin_capability_and_relock_discards_approvals() {
         .as_deref(),
         Some("invalid_request")
     );
-    let request = call(&config.agent_socket, &AgentRequest::Request { operation })
+    let mut owner = avd::ipc::Connection::connect(&config.agent_socket)
+        .await
+        .unwrap();
+    let request = owner
+        .call(&AgentRequest::Request { operation })
         .await
         .unwrap();
     let id = serde_json::from_value(request.data.unwrap()["request_id"].clone()).unwrap();
@@ -271,21 +275,25 @@ async fn relock_shutdown_cancels_a_running_proxy_task() {
         "max_connects":1,"max_requests":1,"max_runtime_seconds":60
     })).unwrap()).unwrap();
     fs::set_permissions(&policy, fs::Permissions::from_mode(0o600)).unwrap();
+    let owner = avd::ExecutionSession::new();
     let broker = Arc::new(Broker::from_vault_with_proxy_policy(&vault, &policy).unwrap());
     let request = broker
-        .request(Operation {
-            connection: "demo/provider".into(),
-            action: "proxy.run".into(),
-            target: "api.example.test".into(),
-            arguments: json!({"command":[sleep,"60"]}),
-        })
+        .request(
+            &owner,
+            Operation {
+                connection: "demo/provider".into(),
+                action: "proxy.run".into(),
+                target: "api.example.test".into(),
+                arguments: json!({"command":[sleep,"60"]}),
+            },
+        )
         .unwrap();
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_secs();
     broker.decide(request, true, now, 60).unwrap();
-    broker.execute_or_start(request, now).await.unwrap();
+    broker.execute_or_start(&owner, request, now).await.unwrap();
     tokio::time::sleep(Duration::from_millis(100)).await;
     assert_eq!(
         broker.task_status(request).unwrap().state,

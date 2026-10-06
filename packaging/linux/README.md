@@ -202,8 +202,9 @@ secret grants, request approval, and a real brokered HTTPS call to a local
 synthetic provider. It also installs a versioned protected connection, invokes
 the public `av run` with a single project reference, checks denial before
 approval, rejects token-only and wrong-passphrase decisions, exercises the
-operator `review`, `approve`, and `deny` commands, and resumes the approved
-host-client task through the fixed proxy.
+operator `review`, `approve`, and `deny` commands, and lets the original waiting CLI execute the approved
+host action through the fixed proxy. The lifecycle script is updated for live
+connection ownership; installed acceptance must be rerun for this change.
 It checks the injected synthetic bearer credential and preserved placeholder,
 then executes the confinement canary through another
 approved recipe. Further checks cover relock with a running task, broker and

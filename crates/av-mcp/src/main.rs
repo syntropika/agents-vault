@@ -21,6 +21,7 @@ struct Adapter {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ProxyTaskArgs {
+    request_id: Uuid,
     connection: String,
     connection_version: u64,
     host: String,
@@ -91,6 +92,7 @@ impl Adapter {
                 };
                 self.agent(AgentRequest::McpRequest {
                     nonce: self.proof(),
+                    request_id: args.request_id,
                     operation,
                 })
                 .await
@@ -171,14 +173,20 @@ impl ServerHandler for Adapter {
             ),
             tool(
                 "request_proxy_task",
-                "Request a frozen task. Its MCP App lets the operator approve or deny one execution attempt. Does not execute the command.",
-                json!({"connection":{"type":"string"},"connection_version":{"type":"integer","minimum":1},"host":{"type":"string"},"command":{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":32}}),
-                json!(["connection", "connection_version", "host", "command"]),
+                "Adopt an existing live av run request by ID and exact intent. The MCP App permits one execution attempt; the original waiting CLI executes automatically.",
+                json!({"request_id":{"type":"string","format":"uuid"},"connection":{"type":"string"},"connection_version":{"type":"integer","minimum":1},"host":{"type":"string"},"command":{"type":"array","items":{"type":"string"},"minItems":1,"maxItems":32}}),
+                json!([
+                    "request_id",
+                    "connection",
+                    "connection_version",
+                    "host",
+                    "command"
+                ]),
                 false,
             ),
             tool(
                 "review_request",
-                "Review a task owned by this enrolled MCP session. Only tasks created through this adapter session can be reviewed.",
+                "Review a task owned by this enrolled MCP session. Only live requests adopted by this adapter session can be reviewed.",
                 review.clone(),
                 json!(["request_id"]),
                 false,
@@ -220,7 +228,7 @@ impl ServerHandler for Adapter {
             Ok(data) => {
                 let mut result = CallToolResult::success(vec![ContentBlock::text(
                     if data.get("review").is_some() {
-                        "Review the frozen task in the MCP App. Approval does not execute it."
+                        "Review the frozen task in the MCP App. The original waiting av run executes automatically after approval."
                     } else {
                         "Authorize this exact MCP session in the local operator console, then refresh the App."
                     },

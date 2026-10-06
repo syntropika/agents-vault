@@ -195,48 +195,43 @@ async fn run_flow(runner_helper: Option<&Path>, av_cli: Option<&Path>, host_clie
         .await
         .unwrap();
     let server_task = tokio::spawn(server.run(std::future::pending()));
+    let mut owner = ipc::Connection::connect(&config.agent_socket)
+        .await
+        .unwrap();
     if host_client {
         assert_idle_proxy().await;
     }
 
     let mut changed = operation(&command);
     changed.target = "other.example.test".to_owned();
-    let rejected = ipc::call(
-        &config.agent_socket,
-        &AgentRequest::Request { operation: changed },
-    )
-    .await
-    .unwrap();
+    let rejected = owner
+        .call(&AgentRequest::Request { operation: changed })
+        .await
+        .unwrap();
     assert_eq!(rejected.error.as_deref(), Some("InvalidOperation"));
     let mut changed = operation(&command);
     changed.arguments = json!({"command": ["/bin/true"]});
-    let rejected = ipc::call(
-        &config.agent_socket,
-        &AgentRequest::Request { operation: changed },
-    )
-    .await
-    .unwrap();
+    let rejected = owner
+        .call(&AgentRequest::Request { operation: changed })
+        .await
+        .unwrap();
     assert_eq!(rejected.error.as_deref(), Some("InvalidOperation"));
 
-    let denied_id = request_id(&config, &command).await;
-    let pending = ipc::call(
-        &config.agent_socket,
-        &AgentRequest::Execute {
+    let denied_id = request_id(&mut owner, &command).await;
+    let pending = owner
+        .call(&AgentRequest::Execute {
             request_id: denied_id,
-        },
-    )
-    .await
-    .unwrap();
+        })
+        .await
+        .unwrap();
     assert_eq!(pending.error.as_deref(), Some("NotApproved"));
     decide(&broker, denied_id, false, 0);
-    let denied = ipc::call(
-        &config.agent_socket,
-        &AgentRequest::Execute {
+    let denied = owner
+        .call(&AgentRequest::Execute {
             request_id: denied_id,
-        },
-    )
-    .await
-    .unwrap();
+        })
+        .await
+        .unwrap();
     assert_eq!(denied.error.as_deref(), Some("Denied"));
     assert!(observed.try_recv().is_err());
     if host_client {
@@ -244,25 +239,24 @@ async fn run_flow(runner_helper: Option<&Path>, av_cli: Option<&Path>, host_clie
     }
 
     if host_client {
-        let expired_id = request_id(&config, &command).await;
+        let expired_id = request_id(&mut owner, &command).await;
         decide(&broker, expired_id, true, 1);
         tokio::time::sleep(Duration::from_millis(1100)).await;
-        let expired = ipc::call(
-            &config.agent_socket,
-            &AgentRequest::Execute {
+        let expired = owner
+            .call(&AgentRequest::Execute {
                 request_id: expired_id,
-            },
-        )
-        .await
-        .unwrap();
+            })
+            .await
+            .unwrap();
         assert_eq!(expired.error.as_deref(), Some("Expired"));
         assert!(observed.try_recv().is_err());
     }
 
-    let approved_id = if let Some(av_cli) = av_cli {
-        request_id_via_cli(&config, &command, av_cli).await
+    let (approved_id, mut cli_child) = if let Some(av_cli) = av_cli {
+        let (id, child) = request_id_via_cli(&config, &command, av_cli).await;
+        (id, Some(child))
     } else {
-        request_id(&config, &command).await
+        (request_id(&mut owner, &command).await, None)
     };
     let initial_proxy_settings = if host_client && av_cli.is_some() {
         let path = client_proxy_settings_path(dir.path());
@@ -282,24 +276,14 @@ async fn run_flow(runner_helper: Option<&Path>, av_cli: Option<&Path>, host_clie
     let mut overlapping_host_request = None;
     let mut live_tunnel = None;
     let mut old_token = None;
-    if let Some(av_cli) = av_cli {
-        let output = tokio::time::timeout(
-            Duration::from_secs(8),
-            tokio::process::Command::new(av_cli)
-                .arg("run")
-                .arg("--resume")
-                .arg(approved_id.to_string())
-                .env("AVD_AGENT_SOCKET", &config.agent_socket)
-                .env("HOME", dir.path())
-                .env("XDG_CONFIG_HOME", dir.path().join("client-config"))
-                .output(),
-        )
-        .await
-        .expect("av resume timed out")
-        .unwrap();
+    if let Some(child) = cli_child.take() {
+        let output = tokio::time::timeout(Duration::from_secs(8), child.wait_with_output())
+            .await
+            .expect("av live run timed out")
+            .unwrap();
         assert!(
             output.status.success(),
-            "av resume failed: {}",
+            "av live run failed: {}",
             String::from_utf8_lossy(&output.stderr)
         );
         if let Some(initial) = initial_proxy_settings {
@@ -311,28 +295,24 @@ async fn run_flow(runner_helper: Option<&Path>, av_cli: Option<&Path>, host_clie
         }
     } else {
         let started = data(
-            ipc::call(
-                &config.agent_socket,
-                &AgentRequest::Execute {
+            owner
+                .call(&AgentRequest::Execute {
                     request_id: approved_id,
-                },
-            )
-            .await
-            .unwrap(),
+                })
+                .await
+                .unwrap(),
         );
         assert_eq!(started["task_id"], approved_id.to_string());
         if host_client {
-            let overlapping_id = request_id(&config, &command).await;
+            let overlapping_id = request_id(&mut owner, &command).await;
             decide(&broker, overlapping_id, true, 60);
             let overlapping = data(
-                ipc::call(
-                    &config.agent_socket,
-                    &AgentRequest::Execute {
+                owner
+                    .call(&AgentRequest::Execute {
                         request_id: overlapping_id,
-                    },
-                )
-                .await
-                .unwrap(),
+                    })
+                    .await
+                    .unwrap(),
             );
             assert_eq!(overlapping["task_id"], overlapping_id.to_string());
             assert!(overlapping.get("host_proxy").is_some());
@@ -393,39 +373,40 @@ async fn run_flow(runner_helper: Option<&Path>, av_cli: Option<&Path>, host_clie
             tunnel.read_exact(&mut accepted).await.unwrap();
             assert_eq!(&accepted, b"HTTP/1.1 200 Connection Established\r\n\r\n");
             live_tunnel = Some(tunnel);
-            let closed = ipc::call(
-                &config.agent_socket,
-                &AgentRequest::FinishHostProxy {
+            let closed = owner
+                .call(&AgentRequest::FinishHostProxy {
                     task_id: approved_id,
                     exit_code: 0,
-                },
-            )
-            .await
-            .unwrap();
+                })
+                .await
+                .unwrap();
             assert!(closed.ok, "broker did not close host proxy");
         }
     }
-    let replay = ipc::call(
-        &config.agent_socket,
-        &AgentRequest::Execute {
+    let replay = owner
+        .call(&AgentRequest::Execute {
             request_id: approved_id,
-        },
-    )
-    .await
-    .unwrap();
-    assert_eq!(replay.error.as_deref(), Some("QuotaExhausted"));
+        })
+        .await
+        .unwrap();
+    assert_eq!(
+        replay.error.as_deref(),
+        Some(if av_cli.is_some() {
+            "WrongExecutionSession"
+        } else {
+            "QuotaExhausted"
+        })
+    );
 
     let status = tokio::time::timeout(Duration::from_secs(8), async {
         loop {
             let status = data(
-                ipc::call(
-                    &config.agent_socket,
-                    &AgentRequest::TaskStatus {
+                owner
+                    .call(&AgentRequest::TaskStatus {
                         task_id: approved_id,
-                    },
-                )
-                .await
-                .unwrap(),
+                    })
+                    .await
+                    .unwrap(),
             );
             if status["state"] != "running" {
                 break status;
@@ -462,15 +443,20 @@ async fn run_flow(runner_helper: Option<&Path>, av_cli: Option<&Path>, host_clie
         assert_idle_proxy().await;
     }
     if let Some((overlapping_id, overlapping)) = overlapping_host_request {
-        let replay = ipc::call(
-            &config.agent_socket,
-            &AgentRequest::Execute {
+        let replay = owner
+            .call(&AgentRequest::Execute {
                 request_id: overlapping_id,
-            },
-        )
-        .await
-        .unwrap();
-        assert_eq!(replay.error.as_deref(), Some("QuotaExhausted"));
+            })
+            .await
+            .unwrap();
+        assert_eq!(
+            replay.error.as_deref(),
+            Some(if av_cli.is_some() {
+                "WrongExecutionSession"
+            } else {
+                "QuotaExhausted"
+            })
+        );
         let mut stale = TcpStream::connect("127.0.0.1:14322").await.unwrap();
         stale
             .write_all(
@@ -516,37 +502,31 @@ async fn run_flow(runner_helper: Option<&Path>, av_cli: Option<&Path>, host_clie
         assert_eq!(second.path, "/probe");
         assert_eq!(second.authorization, format!("Bearer {SECRET}"));
         assert_eq!(second.fixture_input, "av-placeholder");
-        let invalid = ipc::call(
-            &config.agent_socket,
-            &AgentRequest::FinishHostProxy {
+        let invalid = owner
+            .call(&AgentRequest::FinishHostProxy {
                 task_id: overlapping_id,
                 exit_code: -1,
-            },
-        )
-        .await
-        .unwrap();
+            })
+            .await
+            .unwrap();
         assert_eq!(invalid.error.as_deref(), Some("InvalidOperation"));
-        let closed = ipc::call(
-            &config.agent_socket,
-            &AgentRequest::FinishHostProxy {
+        let closed = owner
+            .call(&AgentRequest::FinishHostProxy {
                 task_id: overlapping_id,
                 exit_code: 42,
-            },
-        )
-        .await
-        .unwrap();
+            })
+            .await
+            .unwrap();
         assert!(closed.ok);
         let status = tokio::time::timeout(Duration::from_secs(8), async {
             loop {
                 let status = data(
-                    ipc::call(
-                        &config.agent_socket,
-                        &AgentRequest::TaskStatus {
+                    owner
+                        .call(&AgentRequest::TaskStatus {
                             task_id: overlapping_id,
-                        },
-                    )
-                    .await
-                    .unwrap(),
+                        })
+                        .await
+                        .unwrap(),
                 );
                 if status["state"] != "running" {
                     break status;
@@ -560,17 +540,15 @@ async fn run_flow(runner_helper: Option<&Path>, av_cli: Option<&Path>, host_clie
         assert_idle_proxy().await;
     }
     if host_client {
-        let expiring_id = request_id(&config, &command).await;
+        let expiring_id = request_id(&mut owner, &command).await;
         decide(&broker, expiring_id, true, 3);
         let started = data(
-            ipc::call(
-                &config.agent_socket,
-                &AgentRequest::Execute {
+            owner
+                .call(&AgentRequest::Execute {
                     request_id: expiring_id,
-                },
-            )
-            .await
-            .unwrap(),
+                })
+                .await
+                .unwrap(),
         );
         assert!(started.get("host_proxy").is_some());
         let expired = tokio::time::timeout(Duration::from_secs(5), async {
@@ -587,17 +565,15 @@ async fn run_flow(runner_helper: Option<&Path>, av_cli: Option<&Path>, host_clie
         assert_eq!(expired.state, avd::TaskState::Failed);
         assert_idle_proxy().await;
 
-        let locking_id = request_id(&config, &command).await;
+        let locking_id = request_id(&mut owner, &command).await;
         decide(&broker, locking_id, true, 10);
         let started = data(
-            ipc::call(
-                &config.agent_socket,
-                &AgentRequest::Execute {
+            owner
+                .call(&AgentRequest::Execute {
                     request_id: locking_id,
-                },
-            )
-            .await
-            .unwrap(),
+                })
+                .await
+                .unwrap(),
         );
         assert!(started.get("host_proxy").is_some());
         broker.shutdown().await;
@@ -635,9 +611,14 @@ async fn assert_idle_proxy() {
     );
 }
 
-async fn request_id_via_cli(config: &ServerConfig, command: &[String], av_cli: &Path) -> Uuid {
+async fn request_id_via_cli(
+    config: &ServerConfig,
+    command: &[String],
+    av_cli: &Path,
+) -> (Uuid, tokio::process::Child) {
+    use tokio::io::{AsyncBufReadExt, BufReader};
     let home = config.agent_socket.parent().unwrap();
-    let output = tokio::process::Command::new(av_cli)
+    let mut child = tokio::process::Command::new(av_cli)
         .args([
             "run",
             "--broker",
@@ -651,21 +632,25 @@ async fn request_id_via_cli(config: &ServerConfig, command: &[String], av_cli: &
         .env("AVD_AGENT_SOCKET", &config.agent_socket)
         .env("HOME", home)
         .env("XDG_CONFIG_HOME", home.join("client-config"))
-        .output()
-        .await
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .kill_on_drop(true)
+        .spawn()
         .unwrap();
-    assert!(
-        output.status.success(),
-        "av broker request failed: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    let stdout = String::from_utf8(output.stdout).unwrap();
-    stdout
-        .lines()
-        .find_map(|line| line.strip_prefix("Pending broker request: "))
-        .expect("av did not report the request ID")
-        .parse()
+    let mut output = BufReader::new(child.stdout.take().unwrap());
+    let mut line = String::new();
+    tokio::time::timeout(Duration::from_secs(5), output.read_line(&mut line))
+        .await
         .unwrap()
+        .unwrap();
+    let id = line
+        .trim()
+        .strip_prefix("Pending broker request: ")
+        .expect("av did not report request ID")
+        .parse()
+        .unwrap();
+    child.stdout = Some(output.into_inner());
+    (id, child)
 }
 
 fn client_proxy_settings_path(home: &Path) -> PathBuf {
@@ -676,16 +661,14 @@ fn client_proxy_settings_path(home: &Path) -> PathBuf {
     }
 }
 
-async fn request_id(config: &ServerConfig, command: &[String]) -> Uuid {
+async fn request_id(owner: &mut ipc::Connection, command: &[String]) -> Uuid {
     let created = data(
-        ipc::call(
-            &config.agent_socket,
-            &AgentRequest::Request {
+        owner
+            .call(&AgentRequest::Request {
                 operation: operation(command),
-            },
-        )
-        .await
-        .unwrap(),
+            })
+            .await
+            .unwrap(),
     );
     serde_json::from_value(created["request_id"].clone()).unwrap()
 }

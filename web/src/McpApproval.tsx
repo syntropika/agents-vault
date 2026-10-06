@@ -91,7 +91,9 @@ export function McpApproval() {
   return (
     <main className="mcp-approval" aria-busy={busy}>
       <h1>{review ? 'Approve this action?' : 'Connect approvals'}</h1>
-      <p className="fine-print">Credentials stay in your local vault.</p>
+      <p className="fine-print">
+        Credentials stay in your local vault. The waiting av run executes after approval.
+      </p>
       {error && (
         <p className="error-banner" role="alert">
           {error}
@@ -102,7 +104,7 @@ export function McpApproval() {
           <h2>{enrollment.authorized ? 'Session connected' : 'Authorize this session'}</h2>
           <p>
             {enrollment.authorized
-              ? 'You can now request an action from this harness.'
+              ? 'You can now review a waiting av run from this harness.'
               : 'Open Agents Vault locally. In Settings, connect the MCP session with this exact ID.'}
           </p>
           <code className="mcp-id">{enrollment.pairing_id}</code>
@@ -154,6 +156,12 @@ export function McpApproval() {
               </dd>
             </div>
             <div>
+              <dt>Execution session</dt>
+              <dd>
+                <code>{review.execution_session}</code>
+              </dd>
+            </div>
+            <div>
               <dt>Status</dt>
               <dd>
                 {typeof review.state === 'string'
@@ -202,7 +210,7 @@ export function McpApproval() {
             </button>
           </div>
           <p className="fine-print">
-            Approval does not start the command. Resume this exact request through av.
+            Approval lets the original waiting av run execute this action automatically.
           </p>
         </>
       )}

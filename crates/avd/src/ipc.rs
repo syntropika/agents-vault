@@ -19,13 +19,15 @@ use tokio::{
 };
 use uuid::Uuid;
 
-use crate::{Broker, BrokerError, Operation};
+use crate::{Broker, BrokerError, ExecutionSession, Operation};
 
 const MAX_REQUEST_BYTES: u64 = 65_536;
 const MAX_ACTIVE_AGENT_HANDLERS: usize = 48;
 const MAX_ACTIVE_CLIENT_HANDLERS: usize = 16;
 const REQUEST_DEADLINE: Duration = Duration::from_secs(5);
 const ACTION_DEADLINE: Duration = Duration::from_secs(20);
+const SESSION_DEADLINE: Duration = Duration::from_secs(420);
+const IDLE_DEADLINE: Duration = Duration::from_secs(300);
 
 #[derive(Clone, Debug)]
 pub struct ServerConfig {
@@ -71,6 +73,7 @@ pub enum AgentRequest {
     },
     McpRequest {
         nonce: String,
+        request_id: Uuid,
         operation: Operation,
     },
     McpReview {
@@ -259,7 +262,7 @@ impl Server {
                     let session = Arc::clone(&self.session);
                     tokio::spawn(async move {
                         let _permit = permit;
-                        let _ = timeout(ACTION_DEADLINE, handle_agent(stream, session)).await;
+                        let _ = timeout(SESSION_DEADLINE, handle_connection(stream, session, false)).await;
                     });
                 }
                 connection = async {
@@ -275,7 +278,7 @@ impl Server {
                     let session = Arc::clone(&self.session);
                     tokio::spawn(async move {
                         let _permit = permit;
-                        let _ = timeout(ACTION_DEADLINE, handle_client(stream, session)).await;
+                        let _ = timeout(SESSION_DEADLINE, handle_connection(stream, session, true)).await;
                     });
                 }
             }
@@ -299,198 +302,268 @@ impl Drop for Server {
     }
 }
 
-async fn read_request(stream: &mut UnixStream) -> io::Result<String> {
-    let mut line = String::new();
+struct ExecutionGuard {
+    owner: ExecutionSession,
+    brokers: Vec<std::sync::Weak<Broker>>,
+    reader: tokio::task::JoinHandle<()>,
+}
+impl Drop for ExecutionGuard {
+    fn drop(&mut self) {
+        self.reader.abort();
+        for broker in &self.brokers {
+            if let Some(broker) = broker.upgrade() {
+                broker.close_execution_session(&self.owner);
+            }
+        }
+    }
+}
+
+/// One persistent reader preserves pipelined frames and detects EOF during execution.
+async fn read_frames(
+    stream: tokio::net::unix::OwnedReadHalf,
+    sender: tokio::sync::mpsc::Sender<String>,
+    closed: tokio::sync::watch::Sender<bool>,
+) {
     let mut reader = BufReader::new(stream);
-    let count = (&mut reader)
-        .take(MAX_REQUEST_BYTES + 1)
-        .read_line(&mut line)
-        .await?;
-    if count == 0 || count as u64 > MAX_REQUEST_BYTES || !line.ends_with('\n') {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, "invalid frame"));
+    let mut first = true;
+    loop {
+        let idle = if first {
+            REQUEST_DEADLINE
+        } else {
+            IDLE_DEADLINE
+        };
+        first = false;
+        match timeout(idle, reader.fill_buf()).await {
+            Ok(Ok(bytes)) if !bytes.is_empty() => {}
+            _ => break,
+        }
+        let mut line = String::new();
+        let read = timeout(
+            REQUEST_DEADLINE,
+            (&mut reader)
+                .take(MAX_REQUEST_BYTES + 1)
+                .read_line(&mut line),
+        )
+        .await;
+        if !matches!(read, Ok(Ok(count)) if count > 0 && count as u64 <= MAX_REQUEST_BYTES)
+            || !line.ends_with('\n')
+        {
+            break;
+        }
+        // A full queue closes the connection; never block EOF monitoring on a caller.
+        if sender.try_send(line).is_err() {
+            break;
+        }
     }
-    Ok(line)
+    closed.send_replace(true);
 }
 
-async fn write_reply(stream: &mut UnixStream, reply: &Reply) -> io::Result<()> {
-    let mut bytes = serde_json::to_vec(reply)?;
-    bytes.push(b'\n');
-    stream.write_all(&bytes).await
-}
-
-async fn handle_agent(
-    mut stream: UnixStream,
+async fn handle_connection(
+    stream: UnixStream,
     session: Arc<crate::session::Session>,
+    client: bool,
 ) -> io::Result<()> {
-    let request = match timeout(REQUEST_DEADLINE, read_request(&mut stream)).await {
-        Ok(request) => request,
-        Err(_) => return Ok(()),
+    let (reader, mut writer) = stream.into_split();
+    let (sender, mut frames) = tokio::sync::mpsc::channel(8);
+    let (closed, mut closure) = tokio::sync::watch::channel(false);
+    let mut guard = ExecutionGuard {
+        owner: ExecutionSession::new(),
+        brokers: Vec::new(),
+        reader: tokio::spawn(read_frames(reader, sender, closed)),
     };
-    let state = session.broker.read().await;
-    let Some(broker) = state.as_ref() else {
-        return write_reply(&mut stream, &Reply::error("Locked")).await;
-    };
-    let reply = match request {
-        Ok(line) => match serde_json::from_str::<AgentRequest>(&line) {
-            Ok(AgentRequest::Request { operation }) => broker_reply(
-                broker
-                    .request(operation)
-                    .map(|request_id| json!({ "request_id": request_id })),
-            ),
-            Ok(AgentRequest::Review { request_id }) => broker_reply(broker.review(request_id)),
-            Ok(AgentRequest::ApprovalLink { request_id }) => match broker.review(request_id) {
-                Ok(review) if review.state == crate::RequestState::Pending => {
-                    match session.approval_link(request_id) {
-                        Some(url) => Reply::data(json!({"url": url})),
-                        None => Reply::error("approval_ui_unavailable"),
-                    }
-                }
-                Ok(_) => Reply::error("request_not_pending"),
-                Err(error) => broker_reply::<Value>(Err(error)),
+    loop {
+        let line = tokio::select! {
+            biased;
+            _ = closure.changed() => return Ok(()),
+            line = frames.recv() => match line { Some(line) => line, None => return Ok(()) },
+        };
+        if *closure.borrow() {
+            return Ok(());
+        }
+        let action = async {
+            let state = session.broker.read().await;
+            let Some(broker) = state.as_ref() else {
+                return Reply::error("Locked");
+            };
+            if !guard
+                .brokers
+                .iter()
+                .any(|b| b.ptr_eq(&Arc::downgrade(broker)))
+            {
+                guard.brokers.push(Arc::downgrade(broker));
+            }
+            if client {
+                dispatch_client(&line, broker, &guard.owner).await
+            } else {
+                dispatch_agent(&line, &session, broker, &guard.owner).await
+            }
+        };
+        let reply = tokio::select! {
+            biased;
+            _ = closure.changed() => return Ok(()),
+            result = timeout(ACTION_DEADLINE, action) => match result { Ok(reply) => reply, Err(_) => return Ok(()) },
+        };
+        let mut bytes = serde_json::to_vec(&reply)?;
+        bytes.push(b'\n');
+        tokio::select! {
+            biased;
+            _ = closure.changed() => return Ok(()),
+            result = timeout(REQUEST_DEADLINE, writer.write_all(&bytes)) => {
+                result.map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "reply timed out"))??;
             },
-            Ok(AgentRequest::McpEnroll { nonce }) => {
-                mcp_reply(session.mcp.enroll(&nonce, session.web_epoch()))
-            }
-            Ok(AgentRequest::McpRequest { nonce, operation }) => mcp_reply(session.mcp.request(
-                &nonce,
-                operation,
-                broker,
-                session.web_epoch(),
-            )),
-            Ok(AgentRequest::McpReview { nonce, request_id }) => mcp_reply(session.mcp.review(
-                &nonce,
-                request_id,
-                broker,
-                session.web_epoch(),
-            )),
-            Ok(AgentRequest::McpDecide {
-                nonce,
-                request_id,
-                review_digest,
-                approve,
-            }) => mcp_reply(session.mcp.decide(
-                &nonce,
-                request_id,
-                &review_digest,
-                approve,
-                broker,
-                session.web_epoch(),
-            )),
-            Ok(AgentRequest::Execute { request_id }) => {
-                broker_reply(broker.execute_or_start(request_id, now_seconds()).await)
-            }
-            Ok(AgentRequest::TaskStatus { task_id }) => broker_reply(broker.task_status(task_id)),
-            Ok(AgentRequest::FinishHostProxy { task_id, exit_code }) => {
-                broker_reply(broker.finish_host_proxy(task_id, exit_code))
-            }
-            Err(_) => Reply::error("invalid_request"),
-        },
-        Err(_) => Reply::error("invalid_frame"),
-    };
-    write_reply(&mut stream, &reply).await
+        }
+    }
 }
 
-async fn handle_client(
-    mut stream: UnixStream,
-    session: Arc<crate::session::Session>,
-) -> io::Result<()> {
-    let request = match timeout(REQUEST_DEADLINE, read_request(&mut stream)).await {
-        Ok(request) => request,
-        Err(_) => return Ok(()),
-    };
-    let state = session.broker.read().await;
-    if state.is_none() {
-        return write_reply(&mut stream, &Reply::error("Locked")).await;
-    }
-    let reply = match request {
-        Ok(line) => match serde_json::from_str::<ClientRequest>(&line) {
-            Ok(ClientRequest::Request { operation }) if client_action(&operation.action) => {
-                let broker = state.as_ref().expect("checked unlocked");
-                broker_reply(
-                    broker
-                        .request(operation)
-                        .map(|request_id| json!({ "request_id": request_id })),
-                )
-            }
-            Ok(ClientRequest::Execute { request_id }) => {
-                match state.as_ref().expect("checked unlocked").review(request_id) {
-                    Ok(review) if client_action(&review.operation.action) => {
-                        let broker = state.as_ref().expect("checked unlocked");
-                        broker_reply(broker.execute_or_start(request_id, now_seconds()).await)
-                    }
-                    _ => Reply::error("invalid_request"),
+async fn dispatch_agent(
+    line: &str,
+    session: &crate::session::Session,
+    broker: &Arc<Broker>,
+    owner: &ExecutionSession,
+) -> Reply {
+    match serde_json::from_str::<AgentRequest>(line) {
+        Ok(AgentRequest::Request { operation }) => broker_reply(
+            broker
+                .request(owner, operation)
+                .map(|request_id| json!({ "request_id": request_id })),
+        ),
+        Ok(AgentRequest::Review { request_id }) => broker_reply(broker.review(request_id)),
+        Ok(AgentRequest::ApprovalLink { request_id }) => match broker.review(request_id) {
+            Ok(review) if review.state == crate::RequestState::Pending => {
+                match session.approval_link(request_id) {
+                    Some(url) => Reply::data(json!({"url": url})),
+                    None => Reply::error("approval_ui_unavailable"),
                 }
             }
-            Ok(ClientRequest::TaskStatus { task_id }) => {
-                match state.as_ref().expect("checked unlocked").review(task_id) {
-                    Ok(review) if client_action(&review.operation.action) => {
-                        let broker = state.as_ref().expect("checked unlocked");
-                        broker_reply(broker.task_status(task_id))
-                    }
-                    _ => Reply::error("invalid_request"),
-                }
-            }
-            Ok(ClientRequest::Request { .. }) | Err(_) => Reply::error("invalid_request"),
+            Ok(_) => Reply::error("request_not_pending"),
+            Err(error) => broker_reply::<Value>(Err(error)),
         },
-        Err(_) => Reply::error("invalid_frame"),
-    };
-    write_reply(&mut stream, &reply).await
+        Ok(AgentRequest::McpEnroll { nonce }) => {
+            mcp_reply(session.mcp.enroll(&nonce, session.web_epoch()))
+        }
+        Ok(AgentRequest::McpRequest {
+            nonce,
+            request_id,
+            operation,
+        }) => mcp_reply(session.mcp.request(
+            &nonce,
+            request_id,
+            operation,
+            broker,
+            session.web_epoch(),
+        )),
+        Ok(AgentRequest::McpReview { nonce, request_id }) => mcp_reply(session.mcp.review(
+            &nonce,
+            request_id,
+            broker,
+            session.web_epoch(),
+        )),
+        Ok(AgentRequest::McpDecide {
+            nonce,
+            request_id,
+            review_digest,
+            approve,
+        }) => mcp_reply(session.mcp.decide(
+            &nonce,
+            request_id,
+            &review_digest,
+            approve,
+            broker,
+            session.web_epoch(),
+        )),
+        Ok(AgentRequest::Execute { request_id }) => broker_reply(
+            broker
+                .execute_or_start(owner, request_id, now_seconds())
+                .await,
+        ),
+        Ok(AgentRequest::TaskStatus { task_id }) => broker_reply(broker.task_status(task_id)),
+        Ok(AgentRequest::FinishHostProxy { task_id, exit_code }) => {
+            broker_reply(broker.finish_host_proxy(owner, task_id, exit_code))
+        }
+        Err(_) => Reply::error("invalid_request"),
+    }
+}
+
+async fn dispatch_client(line: &str, broker: &Arc<Broker>, owner: &ExecutionSession) -> Reply {
+    match serde_json::from_str::<ClientRequest>(line) {
+        Ok(ClientRequest::Request { operation }) if client_action(&operation.action) => {
+            broker_reply(
+                broker
+                    .request(owner, operation)
+                    .map(|request_id| json!({ "request_id": request_id })),
+            )
+        }
+        Ok(ClientRequest::Execute { request_id }) => match broker.review(request_id) {
+            Ok(review) if client_action(&review.operation.action) => broker_reply(
+                broker
+                    .execute_or_start(owner, request_id, now_seconds())
+                    .await,
+            ),
+            _ => Reply::error("invalid_request"),
+        },
+        Ok(ClientRequest::TaskStatus { task_id }) => match broker.review(task_id) {
+            Ok(review) if client_action(&review.operation.action) => {
+                broker_reply(broker.task_status(task_id))
+            }
+            _ => Reply::error("invalid_request"),
+        },
+        Ok(ClientRequest::Request { .. }) | Err(_) => Reply::error("invalid_request"),
+    }
 }
 
 fn client_action(action: &str) -> bool {
     action == "proxy.run"
 }
 
-/// One request per connection keeps the prototype protocol inspectable.
-pub async fn call<T: Serialize>(socket: &Path, request: &T) -> io::Result<Reply> {
-    call_with_deadline(socket, request, REQUEST_DEADLINE).await
+/// A connection carries execution authority; reconnecting never resumes that authority.
+pub struct Connection {
+    reader: BufReader<UnixStream>,
 }
-
-pub async fn call_client(socket: &Path, request: &ClientRequest) -> io::Result<Reply> {
-    let deadline = if matches!(request, ClientRequest::Execute { .. }) {
-        ACTION_DEADLINE
-    } else {
-        REQUEST_DEADLINE
-    };
-    call_with_deadline(socket, request, deadline).await
-}
-
-pub async fn call_agent(socket: &Path, request: &AgentRequest) -> io::Result<Reply> {
-    let deadline = if matches!(request, AgentRequest::Execute { .. }) {
-        ACTION_DEADLINE
-    } else {
-        REQUEST_DEADLINE
-    };
-    call_with_deadline(socket, request, deadline).await
-}
-
-async fn call_with_deadline<T: Serialize>(
-    socket: &Path,
-    request: &T,
-    deadline: Duration,
-) -> io::Result<Reply> {
-    timeout(deadline, call_inner(socket, request))
+impl Connection {
+    pub async fn connect(socket: &Path) -> io::Result<Self> {
+        Ok(Self {
+            reader: BufReader::new(UnixStream::connect(socket).await?),
+        })
+    }
+    pub async fn call<T: Serialize>(&mut self, request: &T) -> io::Result<Reply> {
+        timeout(ACTION_DEADLINE, async {
+            let mut bytes = serde_json::to_vec(request)?;
+            if bytes.len() as u64 >= MAX_REQUEST_BYTES {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "request too large",
+                ));
+            }
+            bytes.push(b'\n');
+            self.reader.get_mut().write_all(&bytes).await?;
+            let mut reply = String::new();
+            (&mut self.reader)
+                .take(MAX_REQUEST_BYTES + 1)
+                .read_line(&mut reply)
+                .await?;
+            if reply.len() as u64 > MAX_REQUEST_BYTES || !reply.ends_with('\n') {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "invalid broker reply",
+                ));
+            }
+            serde_json::from_str(&reply)
+                .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
+        })
         .await
         .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "broker IPC timed out"))?
+    }
 }
 
-async fn call_inner<T: Serialize>(socket: &Path, request: &T) -> io::Result<Reply> {
-    let mut stream = UnixStream::connect(socket).await?;
-    let mut bytes = serde_json::to_vec(request)?;
-    bytes.push(b'\n');
-    stream.write_all(&bytes).await?;
-    let mut reply = String::new();
-    BufReader::new(stream)
-        .take(MAX_REQUEST_BYTES + 1)
-        .read_line(&mut reply)
-        .await?;
-    if reply.len() as u64 > MAX_REQUEST_BYTES || !reply.ends_with('\n') {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            "invalid broker reply",
-        ));
-    }
-    serde_json::from_str(&reply).map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
+/// Stateless operations may use a temporary connection. A request is revoked on close.
+pub async fn call<T: Serialize>(socket: &Path, request: &T) -> io::Result<Reply> {
+    Connection::connect(socket).await?.call(request).await
+}
+pub async fn call_client(socket: &Path, request: &ClientRequest) -> io::Result<Reply> {
+    call(socket, request).await
+}
+pub async fn call_agent(socket: &Path, request: &AgentRequest) -> io::Result<Reply> {
+    call(socket, request).await
 }
 
 fn mcp_reply(result: anyhow::Result<Value>) -> Reply {

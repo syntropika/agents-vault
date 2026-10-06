@@ -804,8 +804,8 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                 <section className="approval-list" aria-label="Action approvals">
                   {requests.length === 0 ? (
                     <Empty icon={ShieldCheck} title="No requests to review">
-                      Enable action execution in Settings. New requests from av or MCP will appear
-                      here. Refresh to check for changes.
+                      Enable action execution in Settings. New requests from waiting av runs will
+                      appear here. Refresh to check for changes.
                     </Empty>
                   ) : (
                     requests.map((request) => (
@@ -826,6 +826,9 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                                 .join(' ')
                             : `${request.operation.action} ${request.operation.target}`}
                         </pre>
+                        <p className="fine-print">
+                          Execution session: <code>{request.execution_session}</code>
+                        </p>
                         <dl className="task-limits">
                           <div>
                             <dt>Credential version</dt>
@@ -872,8 +875,8 @@ export function App({ api: suppliedApi }: { api?: OperatorApi }) {
                           </button>
                         </div>
                         <p className="fine-print">
-                          Approval does not start the command. Resume the reviewed request through
-                          av.
+                          Approval lets the original waiting av run execute this action
+                          automatically.
                         </p>
                       </article>
                     ))

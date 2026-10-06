@@ -61,18 +61,18 @@ delivery = "proxy"
 required = true
 ```
 
-With an installed matching recipe, `av run -- /absolute/path/to/command` requests the task. From a trusted operator terminal, review and decide the exact pending request before resuming it:
+With an installed matching recipe, `av run -- /absolute/path/to/command` requests the task. From a trusted operator terminal, review and decide the exact pending request while the original CLI remains running:
 
     av protected review REQUEST_ID
     av protected approve REQUEST_ID
-    av run --resume REQUEST_ID
 
-`av protected deny REQUEST_ID` rejects it instead. The installed operator helper shows the broker-owned review before asking for the vault passphrase. A selected project environment currently supports exactly one connection value and no other values in this path. The earlier explicit fixture form also remains available:
+`av protected deny REQUEST_ID` rejects it instead. The installed operator helper shows the broker-owned review before asking for the vault passphrase. A selected project environment currently supports exactly one connection value and no other values in this path. The explicit synthetic fixture form is:
 
     av run --broker --broker-connection demo/fixture --broker-host api.example.test -- /absolute/path/to/configured-fixture-command
-    av run --resume REQUEST_ID
 
-The MCP adapter exposes `request_proxy_task` and `review_request`. The broker can use versioned records from `av protected connect add`, while the fixture mode uses a separate demo secret. Local direct-vault records are never copied into the protected service automatically. A request freezes command, host and connection version; the installed policy sets quotas and lifetime. MCP offers a broker-owned local approval link. The operator supplies the vault passphrase directly to its page, or decides through the private terminal route. Client responses alone do not authorize a request. Execution uses `av run --resume`; the broker consumes one attempt. See [authenticated local approval](approval-flow.md).
+The MCP adapter requires MCP Apps and operator enrollment of its exact session. Start `av run` first and keep it connected. `request_proxy_task` adopts the existing request ID plus its exact connection, version, host and command; `review_request` reviews requests adopted by that enrollment. Approval allows one attempt within 60 seconds and the waiting CLI executes automatically. The CLI waits at most five minutes for a decision. Closing its connection revokes pending approvals and active grants; reconnecting cannot recover execution authority. `--resume` is not supported.
+
+Local direct-vault records are never copied into the protected service automatically. The authenticated local console and private operator terminal remain independent approval routes; the MCP adapter does not automatically fall back to a browser link. See [local approvals and MCP Apps](approval-flow.md).
 
 Current broker policies are fixture-oriented. An exact host does not constrain an API path or operation, a provider response may reflect the credential, and a command that ignores the proxy cannot be assumed safe. Do not treat these commands as broad provider support or a release-level custody guarantee.
 

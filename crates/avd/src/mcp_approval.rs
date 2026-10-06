@@ -30,7 +30,7 @@ fn key(nonce: &str) -> Result<String> {
 pub fn review_digest(review: &Review) -> Result<String> {
     // State changes do not change intent. Command, limits, version and ID do.
     Ok(hex::encode(Sha256::digest(serde_json::to_vec(
-        &json!({"id":review.id,"operation":review.operation,"task_policy":review.task_policy}),
+        &json!({"id":review.id,"operation":review.operation,"task_policy":review.task_policy,"execution_session":review.execution_session}),
     )?)))
 }
 impl McpApprovals {
@@ -84,13 +84,21 @@ impl McpApprovals {
     pub(crate) fn request(
         &self,
         nonce: &str,
+        id: Uuid,
         operation: Operation,
         broker: &Broker,
         epoch: u64,
     ) -> Result<Value> {
         let mut sessions = self.sessions.lock().unwrap();
+        let proof = key(nonce)?;
+        ensure!(
+            !sessions
+                .iter()
+                .any(|(key, s)| key != &proof && s.requests.contains(&id)),
+            "request already adopted"
+        );
         let session = sessions
-            .get_mut(&key(nonce)?)
+            .get_mut(&proof)
             .ok_or_else(|| anyhow::anyhow!("MCP session not enrolled"))?;
         ensure!(
             session.authorized && session.epoch == epoch && session.deadline > Instant::now(),
@@ -100,11 +108,10 @@ impl McpApprovals {
             session.requests.len() < 32,
             "MCP session task limit reached"
         );
-        let id = broker
-            .request(operation)
+        let review = broker
+            .review_for_adoption(id, operation)
             .map_err(|e| anyhow::anyhow!("{e:?}"))?;
         session.requests.insert(id);
-        let review = broker.review(id).map_err(|e| anyhow::anyhow!("{e:?}"))?;
         Ok(json!({"review":review,"review_digest":review_digest(&review)?}))
     }
     fn owned(
@@ -210,6 +217,7 @@ mod tests {
     fn review_digest_binds_id_command_version_host_and_quotas() {
         let review = Review {
             id: Uuid::new_v4(),
+            execution_session: Uuid::new_v4(),
             operation: Operation {
                 connection: "test/cli".into(),
                 action: "proxy.run".into(),
@@ -246,6 +254,9 @@ mod tests {
             .unwrap()
             .command
             .push("extra".into());
+        assert_ne!(review_digest(&changed).unwrap(), original);
+        let mut changed = review.clone();
+        changed.execution_session = Uuid::new_v4();
         assert_ne!(review_digest(&changed).unwrap(), original);
         let mut changed = review;
         changed.state = RequestState::Denied;

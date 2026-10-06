@@ -13,6 +13,8 @@ import signal
 import socket
 import ssl
 import subprocess
+import select
+import tempfile
 import threading
 import time
 import traceback
@@ -172,21 +174,34 @@ def install():
     run("/boundary-tests/install.sh", "--bin-dir", "/input-binaries", "--agent-uid", str(AGENT_UID))
 
 
+LIVE_CLIENTS = []
+
+
+def start_action(arguments, environment):
+    process = subprocess.Popen([str(BIN / "av"), *arguments], preexec_fn=identity(AGENT_UID),
+        env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    LIVE_CLIENTS.append(process)
+    ready, _, _ = select.select([process.stdout], [], [], 10)
+    assert ready, "av did not report a pending action"
+    line = process.stdout.readline()
+    assert line.startswith("Pending broker request: "), line
+    return process, line.strip().removeprefix("Pending broker request: ")
+
+
 def request_task(uid, command):
-    operation = {"connection": "demo/provider", "action": "proxy.run", "target": "api.example.test", "arguments": {"command": command}}
-    reply = as_uid(AGENT_UID, lambda: call("agent.sock", {"op": "request", "operation": operation}))["value"]
-    assert reply["ok"], reply
-    request_id = reply["data"]["request_id"]
+    home = pathlib.Path(tempfile.mkdtemp(prefix="av-live-cli-"))
+    os.chown(home, AGENT_UID, AGENT_UID)
+    process, request_id = start_action(
+        ["run", "--broker", "--broker-connection", "demo/provider", "--broker-host", "api.example.test", "--", *command],
+        {"PATH":"/usr/bin:/bin", "HOME":str(home), "XDG_CONFIG_HOME":str(home / "config"), "AVD_AGENT_SOCKET":str(BASE / "agent.sock")})
     before = as_uid(AGENT_UID, lambda: call("agent.sock", {"op": "execute", "request_id": request_id}))["value"]
-    assert before["error"] == "NotApproved", before
+    assert before["error"] == "WrongExecutionSession", before
     token = (BASE / "admin.token").read_text()
     approved = as_uid(uid, lambda: call("admin.sock", {"op": "decide", "token": token,
-        "passphrase": PASSPHRASE.rstrip("\n"), "request_id": request_id,
-        "approve": True, "ttl_seconds": 60}))["value"]
+        "passphrase": PASSPHRASE.rstrip("\n"), "request_id": request_id, "approve": True, "ttl_seconds": 60}))["value"]
     assert approved["ok"], approved
-    started = as_uid(AGENT_UID, lambda: call("agent.sock", {"op": "execute", "request_id": request_id}))["value"]
-    assert started["ok"], started
-    return started["data"]["task_id"]
+    wait_for(lambda: task_status(request_id).get("data", {}).get("state") is not None, "owner did not start its action")
+    return request_id
 
 
 def task_status(task_id):
@@ -299,15 +314,10 @@ def main():
         "PATH": "/usr/bin:/bin", "HOME": str(project),
         "XDG_CONFIG_HOME": str(proxy_config), "AVD_AGENT_SOCKET": str(BASE / "agent.sock"),
     }
-    requested = subprocess.run(
-        [str(BIN / "av"), "--config", str(config_path), "run", "--", *host_command],
-        preexec_fn=identity(AGENT_UID), env=agent_env, capture_output=True, text=True, timeout=10,
-    )
-    assert requested.returncode == 0, requested.stderr
-    request_id = requested.stdout.strip().split("Pending broker request: ")[-1].splitlines()[0]
-    assert len(request_id) == 36, requested.stdout
+    requested, request_id = start_action(["--config", str(config_path), "run", "--", *host_command], agent_env)
+    assert len(request_id) == 36
     before = as_uid(AGENT_UID, lambda: call("agent.sock", {"op": "execute", "request_id": request_id}))["value"]
-    assert before["error"] == "NotApproved", before
+    assert before["error"] == "WrongExecutionSession", before
     forged = as_uid(AGENT_UID, lambda: call("agent.sock", {
         "op": "decide", "request_id": request_id, "approve": True, "ttl_seconds": 60,
     }))["value"]
@@ -327,31 +337,25 @@ def main():
     form = approval_form(request_id, "wrong", "approve")
     assert approval_http(request_id, form, "http://evil.test")[0] == 403
     assert approval_http(request_id, form)[0] == 401
-    assert as_uid(AGENT_UID, lambda: call("agent.sock", {"op": "execute", "request_id": request_id}))["value"]["error"] == "NotApproved"
+    assert as_uid(AGENT_UID, lambda: call("agent.sock", {"op": "execute", "request_id": request_id}))["value"]["error"] == "WrongExecutionSession"
     time.sleep(1.1)
     form = approval_form(request_id, PASSPHRASE.strip(), "approve")
     assert approval_http(request_id, form)[0] == 200
     assert approval_http(request_id, form)[0] == 403
-    resumed = subprocess.run(
-        [str(BIN / "av"), "run", "--resume", request_id],
-        preexec_fn=identity(AGENT_UID), env=agent_env, capture_output=True, text=True, timeout=30,
-    )
-    assert resumed.returncode == 0, (resumed.stdout, resumed.stderr)
-    assert SECRET not in requested.stdout + requested.stderr + resumed.stdout + resumed.stderr
+    stdout, stderr = requested.communicate(timeout=30)
+    assert requested.returncode == 0, (stdout, stderr)
+    assert SECRET not in stdout + stderr
     assert len(provider.requests) == 2 and not provider.errors, (provider.requests, provider.errors)
     assert "authorization: bearer " + SECRET in provider.requests[1].lower()
-    denied_request = subprocess.run(
-        [str(BIN / "av"), "--config", str(config_path), "run", "--", *host_command],
-        preexec_fn=identity(AGENT_UID), env=agent_env, capture_output=True, text=True, timeout=10,
-    )
-    assert denied_request.returncode == 0, denied_request.stderr
-    denied_id = denied_request.stdout.strip().split("Pending broker request: ")[-1].splitlines()[0]
+    denied_request, denied_id = start_action(["--config", str(config_path), "run", "--", *host_command], agent_env)
     time.sleep(1.1)
     assert approval_http(denied_id, approval_form(denied_id, PASSPHRASE.strip(), "deny"))[0] == 200
     blocked = as_uid(AGENT_UID, lambda: call("agent.sock", {
         "op": "execute", "request_id": denied_id,
     }))["value"]
-    assert blocked["error"] == "Denied", blocked
+    assert blocked["error"] == "WrongExecutionSession", blocked
+    stdout, stderr = denied_request.communicate(timeout=10)
+    assert denied_request.returncode != 0 and "denied" in stderr.lower()
     operator(broker.pw_uid, "lock")
     policy_path.write_text(json.dumps(policy))
     operator(broker.pw_uid, "grant", PASSPHRASE, "demo/provider-token")

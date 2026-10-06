@@ -232,29 +232,44 @@ mod unix {
             "--".into(),
         ];
         request_args.extend(command.clone());
-        let requested = run_av(request_args).output().await.unwrap();
-        assert!(
-            requested.status.success(),
-            "{}",
-            String::from_utf8_lossy(&requested.stderr)
-        );
-        let stdout = String::from_utf8(requested.stdout).unwrap();
-        let id: Uuid = stdout
-            .lines()
-            .find_map(|line| line.strip_prefix("Pending broker request: "))
+        use tokio::io::{AsyncBufReadExt, BufReader};
+        let mut child = run_av(request_args)
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .kill_on_drop(true)
+            .spawn()
+            .unwrap();
+        let mut stdout = BufReader::new(child.stdout.take().unwrap());
+        let mut line = String::new();
+        tokio::time::timeout(
+            std::time::Duration::from_secs(5),
+            stdout.read_line(&mut line),
+        )
+        .await
+        .unwrap()
+        .unwrap();
+        let id: Uuid = line
+            .trim()
+            .strip_prefix("Pending broker request: ")
             .unwrap()
             .parse()
             .unwrap();
+        child.stdout = Some(stdout.into_inner());
         let review = call_agent(&socket, &AgentRequest::Review { request_id: id })
             .await
             .unwrap();
         let frozen: avd::Review = serde_json::from_value(review.data.unwrap()).unwrap();
         assert_eq!(frozen.state, RequestState::Pending);
         assert!(!serde_json::to_string(&frozen).unwrap().contains(SECRET));
-        let resume_args = |id: Uuid| vec!["run".into(), "--resume".into(), id.to_string()];
-        let pending = run_av(resume_args(id)).output().await.unwrap();
-        assert!(!pending.status.success());
-        assert!(String::from_utf8_lossy(&pending.stderr).contains("NotApproved"));
+        let foreign = call_agent(&socket, &AgentRequest::Execute { request_id: id })
+            .await
+            .unwrap();
+        assert_eq!(foreign.error.as_deref(), Some("WrongExecutionSession"));
+        let removed = run_av(vec!["run".into(), "--resume".into(), id.to_string()])
+            .output()
+            .await
+            .unwrap();
+        assert!(!removed.status.success());
         let forged = avd::ipc::call(
             &socket,
             &json!({
@@ -282,17 +297,13 @@ mod unix {
             Some("operator authentication failed")
         );
 
-        // Exercise denials and expiry through the same public execution command.
+        // Exercise denial and expiry on the submitting public IPC connection.
+        let mut other = avd::ipc::Connection::connect(&socket).await.unwrap();
         let request_again = || AgentRequest::Request {
             operation: frozen.operation.clone(),
         };
         let denied: Uuid = serde_json::from_value(
-            call_agent(&socket, &request_again())
-                .await
-                .unwrap()
-                .data
-                .unwrap()["request_id"]
-                .clone(),
+            other.call(&request_again()).await.unwrap().data.unwrap()["request_id"].clone(),
         )
         .unwrap();
         assert!(
@@ -310,16 +321,17 @@ mod unix {
             .unwrap()
             .ok
         );
-        let result = run_av(resume_args(denied)).output().await.unwrap();
-        assert!(!result.status.success());
-        assert!(String::from_utf8_lossy(&result.stderr).contains("Denied"));
-        let expired: Uuid = serde_json::from_value(
-            call_agent(&socket, &request_again())
+        assert_eq!(
+            other
+                .call(&AgentRequest::Execute { request_id: denied })
                 .await
                 .unwrap()
-                .data
-                .unwrap()["request_id"]
-                .clone(),
+                .error
+                .as_deref(),
+            Some("Denied")
+        );
+        let expired: Uuid = serde_json::from_value(
+            other.call(&request_again()).await.unwrap().data.unwrap()["request_id"].clone(),
         )
         .unwrap();
         assert!(
@@ -338,9 +350,17 @@ mod unix {
             .ok
         );
         tokio::time::sleep(std::time::Duration::from_millis(1100)).await;
-        let result = run_av(resume_args(expired)).output().await.unwrap();
-        assert!(!result.status.success());
-        assert!(String::from_utf8_lossy(&result.stderr).contains("Expired"));
+        assert_eq!(
+            other
+                .call(&AgentRequest::Execute {
+                    request_id: expired
+                })
+                .await
+                .unwrap()
+                .error
+                .as_deref(),
+            Some("Expired")
+        );
         let mut changed: Operation = frozen.operation.clone();
         changed.arguments["command"] = json!([curl, "https://other.example.test/"]);
         assert_eq!(
@@ -370,33 +390,34 @@ mod unix {
                 .iter()
                 .any(|reply| reply.error.as_deref() == Some("AlreadyDecided"))
         );
-        let (first, second) = tokio::join!(
-            run_av(resume_args(id)).output(),
-            run_av(resume_args(id)).output()
+        let execute_request = AgentRequest::Execute { request_id: id };
+        let finish_request = AgentRequest::FinishHostProxy {
+            task_id: id,
+            exit_code: 42,
+        };
+        let (execute, finish) = tokio::join!(
+            call_agent(&socket, &execute_request),
+            call_agent(&socket, &finish_request)
         );
-        let outputs = [first.unwrap(), second.unwrap()];
         assert_eq!(
-            outputs
-                .iter()
-                .filter(|output| output.status.success())
-                .count(),
-            1
+            execute.unwrap().error.as_deref(),
+            Some("WrongExecutionSession")
         );
-        let resumed = outputs
-            .iter()
-            .find(|output| output.status.success())
-            .unwrap();
-        let refused = outputs
-            .iter()
-            .find(|output| !output.status.success())
-            .unwrap();
-        assert!(String::from_utf8_lossy(&refused.stderr).contains("QuotaExhausted"));
+        assert_eq!(
+            finish.unwrap().error.as_deref(),
+            Some("WrongExecutionSession")
+        );
+        let output =
+            tokio::time::timeout(std::time::Duration::from_secs(10), child.wait_with_output())
+                .await
+                .unwrap()
+                .unwrap();
         assert!(
-            resumed.status.success(),
+            output.status.success(),
             "{}",
-            String::from_utf8_lossy(&resumed.stderr)
+            String::from_utf8_lossy(&output.stderr)
         );
-        assert_eq!(resumed.stdout, b"ok");
+        assert!(String::from_utf8_lossy(&output.stdout).ends_with("ok"));
         assert_eq!(seen_receiver.await.unwrap(), format!("Bearer {SECRET}"));
         let status: avd::TaskStatus = serde_json::from_value(
             call_agent(&socket, &AgentRequest::TaskStatus { task_id: id })
@@ -408,9 +429,14 @@ mod unix {
         .unwrap();
         assert_eq!(status.state, TaskState::Finished);
         assert_eq!(status.exit_code, Some(0));
-        let replay = run_av(resume_args(id)).output().await.unwrap();
-        assert!(!replay.status.success());
-        assert!(String::from_utf8_lossy(&replay.stderr).contains("QuotaExhausted"));
+        assert_eq!(
+            call_agent(&socket, &AgentRequest::Execute { request_id: id })
+                .await
+                .unwrap()
+                .error
+                .as_deref(),
+            Some("WrongExecutionSession")
+        );
         assert!(
             admin_call(
                 &admin_socket,
@@ -422,9 +448,14 @@ mod unix {
             .unwrap()
             .ok
         );
-        let locked = run_av(resume_args(id)).output().await.unwrap();
-        assert!(!locked.status.success());
-        assert!(String::from_utf8_lossy(&locked.stderr).contains("Locked"));
+        assert_eq!(
+            call_agent(&socket, &AgentRequest::Execute { request_id: id })
+                .await
+                .unwrap()
+                .error
+                .as_deref(),
+            Some("Locked")
+        );
         assert!(
             admin_call(
                 &admin_socket,
@@ -437,9 +468,14 @@ mod unix {
             .unwrap()
             .ok
         );
-        let stale = run_av(resume_args(id)).output().await.unwrap();
-        assert!(!stale.status.success());
-        assert!(String::from_utf8_lossy(&stale.stderr).contains("UnknownRequest"));
+        assert_eq!(
+            call_agent(&socket, &AgentRequest::Execute { request_id: id })
+                .await
+                .unwrap()
+                .error
+                .as_deref(),
+            Some("UnknownRequest")
+        );
         provider_task.abort();
         server_task.abort();
         admin_task.abort();

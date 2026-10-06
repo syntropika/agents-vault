@@ -21,6 +21,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use uuid::Uuid;
 
+mod execution;
+pub use execution::ExecutionSession;
 pub mod ipc;
 mod isolation;
 mod proxy_task;
@@ -57,6 +59,7 @@ pub struct Review {
     pub id: Uuid,
     pub operation: Operation,
     pub state: RequestState,
+    pub execution_session: Uuid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub task_policy: Option<TaskPolicySnapshot>,
 }
@@ -85,6 +88,7 @@ pub enum BrokerError {
     QuotaExhausted,
     CapacityExceeded,
     StartFailed,
+    WrongExecutionSession,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -108,6 +112,7 @@ struct TrackedTask {
 }
 
 struct Entry {
+    owner: ExecutionSession,
     operation: Operation,
     state: RequestState,
     created_at: u64,
@@ -203,8 +208,12 @@ impl Broker {
         })
     }
 
-    pub fn request(&self, operation: Operation) -> Result<Uuid, BrokerError> {
-        self.request_at(operation, now_seconds())
+    pub fn request(
+        &self,
+        owner: &ExecutionSession,
+        operation: Operation,
+    ) -> Result<Uuid, BrokerError> {
+        self.request_at(owner, operation, now_seconds())
     }
 
     fn canonicalize_operation(&self, mut operation: Operation) -> Result<Operation, BrokerError> {
@@ -244,18 +253,24 @@ impl Broker {
         Ok(operation)
     }
 
-    fn request_at(&self, operation: Operation, now: u64) -> Result<Uuid, BrokerError> {
+    fn request_at(
+        &self,
+        owner: &ExecutionSession,
+        operation: Operation,
+        now: u64,
+    ) -> Result<Uuid, BrokerError> {
         let operation = self.canonicalize_operation(operation)?;
         let mut state = self.entries.lock().expect("broker mutex poisoned");
-        Self::insert_request(&mut state, operation, now)
+        Self::insert_request(&mut state, owner, operation, now)
     }
 
     fn insert_request(
         state: &mut BrokerState,
+        owner: &ExecutionSession,
         operation: Operation,
         now: u64,
     ) -> Result<Uuid, BrokerError> {
-        if state.closed {
+        if state.closed || !owner.is_live() {
             return Err(BrokerError::Denied);
         }
         state
@@ -275,6 +290,7 @@ impl Broker {
         state.requests.insert(
             id,
             Entry {
+                owner: owner.clone(),
                 operation,
                 state: RequestState::Pending,
                 created_at: now,
@@ -285,15 +301,19 @@ impl Broker {
     }
 
     pub fn review(&self, id: Uuid) -> Result<Review, BrokerError> {
-        let (operation, state) = {
+        let (operation, state, execution_session) = {
             let entries = self.entries.lock().expect("broker mutex poisoned");
             let entry = entries
                 .requests
                 .get(&id)
                 .ok_or(BrokerError::UnknownRequest)?;
-            (entry.operation.clone(), entry.state.clone())
+            (
+                entry.operation.clone(),
+                entry.state.clone(),
+                entry.owner.id(),
+            )
         };
-        self.build_review(id, operation, state)
+        self.build_review(id, operation, state, execution_session)
     }
 
     pub(crate) fn web_reviews(&self) -> Result<Vec<Review>, BrokerError> {
@@ -318,9 +338,11 @@ impl Broker {
         id: Uuid,
         operation: Operation,
         state: RequestState,
+        execution_session: Uuid,
     ) -> Result<Review, BrokerError> {
         Ok(Review {
             id,
+            execution_session,
             task_policy: if operation.action == "proxy.run" {
                 self.proxy.as_ref().map(|proxy| TaskPolicySnapshot {
                     host: proxy.policy.host.clone(),
@@ -355,6 +377,9 @@ impl Broker {
             .requests
             .get_mut(&id)
             .ok_or(BrokerError::UnknownRequest)?;
+        if !entry.owner.is_live() {
+            return Err(BrokerError::WrongExecutionSession);
+        }
         if entry.state != RequestState::Pending {
             return Err(BrokerError::AlreadyDecided);
         }
@@ -375,16 +400,17 @@ impl Broker {
         Ok(entry.state.clone())
     }
 
-    /// Execution accepts only the request ID and uses the original intent.
+    /// Execute the frozen intent only on its original live IPC session.
     pub async fn execute_or_start(
         self: &Arc<Self>,
+        owner: &ExecutionSession,
         id: Uuid,
         now: u64,
     ) -> Result<Value, BrokerError> {
         self.start_host_proxy_listener()
             .await
             .map_err(|_| BrokerError::StartFailed)?;
-        let (status, ready) = self.start_proxy_task_inner(id, now)?;
+        let (status, ready) = self.start_proxy_task_inner(owner, id, now)?;
         if let Some(ready) = ready {
             let details = ready.await.map_err(|_| BrokerError::StartFailed)?;
             Ok(json!({"task_id": status.task_id, "state": status.state, "host_proxy": details}))
@@ -395,6 +421,7 @@ impl Broker {
 
     fn start_proxy_task_inner(
         self: &Arc<Self>,
+        owner: &ExecutionSession,
         id: Uuid,
         now: u64,
     ) -> Result<
@@ -410,6 +437,7 @@ impl Broker {
             .requests
             .get_mut(&id)
             .ok_or(BrokerError::UnknownRequest)?;
+        entry.owner.authorize(owner)?;
         let expected_action = "proxy.run";
         if entry.operation.action != expected_action {
             return Err(BrokerError::InvalidOperation);
@@ -450,7 +478,6 @@ impl Broker {
         entry.state = RequestState::Exhausted;
         entry.updated_at = now;
         drop(tasks);
-        drop(entries);
         let tasks = Arc::clone(&self.tasks);
         let proxy = Arc::clone(proxy);
         let host_proxy = self.host_proxy.get().cloned();
@@ -468,9 +495,21 @@ impl Broker {
             None
         };
         drop(active_host);
+        drop(entries);
         let host_cancel = Arc::clone(&self.host_cancel);
-        let shutdown = self.shutdown.subscribe();
+        let mut broker_shutdown = self.shutdown.subscribe();
+        let mut owner_closed = owner.closure();
         let handle = tokio::spawn(async move {
+            let (signal, shutdown) =
+                tokio::sync::watch::channel(*broker_shutdown.borrow() || *owner_closed.borrow());
+            let forward = tokio::spawn(async move {
+                tokio::select! {
+                    _ = broker_shutdown.changed() => {},
+                    _ = owner_closed.changed() => {},
+                    _ = signal.closed() => return,
+                }
+                signal.send_replace(true);
+            });
             let result = if let Some(sender) = ready_sender {
                 proxy
                     .run_host_client(
@@ -486,6 +525,7 @@ impl Broker {
             } else {
                 proxy.run(expires_at, shutdown).await
             };
+            forward.abort();
             host_cancel
                 .lock()
                 .expect("host cancel mutex poisoned")
@@ -505,6 +545,53 @@ impl Broker {
         handles.retain(|handle| !handle.is_finished());
         handles.push(handle);
         Ok((status, ready_receiver))
+    }
+
+    /// Closing the original IPC connection revokes pending and active host grants.
+    pub fn close_execution_session(&self, owner: &ExecutionSession) {
+        let mut entries = self.entries.lock().expect("broker mutex poisoned");
+        owner.close();
+        let mut active = self.host_cancel.lock().expect("host cancel mutex poisoned");
+        for (id, entry) in &mut entries.requests {
+            if entry.owner.same_session(owner) {
+                if matches!(
+                    entry.state,
+                    RequestState::Pending | RequestState::Approved { .. }
+                ) {
+                    entry.state = RequestState::Denied;
+                    entry.updated_at = now_seconds();
+                }
+                if let Some(Some(sender)) = active.remove(id) {
+                    let _ = sender.send(1);
+                }
+            }
+        }
+    }
+
+    /// MCP may adopt the exact pending intent, but never replace execution ownership.
+    pub(crate) fn review_for_adoption(
+        &self,
+        id: Uuid,
+        operation: Operation,
+    ) -> Result<Review, BrokerError> {
+        let canonical = self.canonicalize_operation(operation)?;
+        let entries = self.entries.lock().expect("broker mutex poisoned");
+        let entry = entries
+            .requests
+            .get(&id)
+            .ok_or(BrokerError::UnknownRequest)?;
+        if !entry.owner.is_live()
+            || entry.state != RequestState::Pending
+            || canonical != entry.operation
+        {
+            return Err(BrokerError::InvalidOperation);
+        }
+        self.build_review(
+            id,
+            entry.operation.clone(),
+            entry.state.clone(),
+            entry.owner.id(),
+        )
     }
 
     /// Stop task proxies and runners before discarding this unlocked session.
@@ -530,7 +617,12 @@ impl Broker {
             .ok_or(BrokerError::UnknownRequest)
     }
 
-    pub fn finish_host_proxy(&self, id: Uuid, exit_code: i32) -> Result<(), BrokerError> {
+    pub fn finish_host_proxy(
+        &self,
+        owner: &ExecutionSession,
+        id: Uuid,
+        exit_code: i32,
+    ) -> Result<(), BrokerError> {
         if !(0..=255).contains(&exit_code) {
             return Err(BrokerError::InvalidOperation);
         }
@@ -541,6 +633,12 @@ impl Broker {
         {
             return Err(BrokerError::InvalidOperation);
         }
+        let entries = self.entries.lock().expect("broker mutex poisoned");
+        let entry = entries
+            .requests
+            .get(&id)
+            .ok_or(BrokerError::UnknownRequest)?;
+        entry.owner.authorize(owner)?;
         let sender = self
             .host_cancel
             .lock()
@@ -569,12 +667,15 @@ mod tests {
     fn broker_without_a_proxy_policy_rejects_task_requests() {
         let broker = Broker::default();
         assert_eq!(
-            broker.request(Operation {
-                connection: "demo/work".into(),
-                action: "unsupported.action".into(),
-                target: "local".into(),
-                arguments: json!({"message": "synthetic message"}),
-            }),
+            broker.request(
+                &ExecutionSession::new(),
+                Operation {
+                    connection: "demo/work".into(),
+                    action: "unsupported.action".into(),
+                    target: "local".into(),
+                    arguments: json!({"message": "synthetic message"}),
+                }
+            ),
             Err(BrokerError::InvalidOperation)
         );
     }

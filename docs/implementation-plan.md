@@ -38,9 +38,9 @@ The project file declares needed values and references. It cannot grant itself a
 
 ## Approval contract
 
-The MCP adapter offers URL elicitation for a broker-owned local approval page, or returns its link for manual review. The page authenticates the vault passphrase directly with the broker and binds the decision to the exact frozen request. A private operator terminal can also decide. Decline, cancellation, malformed client content, unsupported elicitation and timeout do not authorize a request. The adapter reads actual broker state; a client returning `accept` cannot replace operator authentication. See [authenticated local approval](approval-flow.md).
+MCP requires MCP Apps and an operator-enrolled trusted harness session. Start `av run` first; the adapter adopts its live request by public ID and exact frozen intent. The App approves or denies one bounded attempt, and the original waiting CLI executes automatically. The broker independently verifies connection ownership before execution and completion; disconnect revokes pending approvals and active grants. The local console and private operator terminal remain separate decision routes, with no automatic adapter fallback. See [local approvals and MCP Apps](approval-flow.md).
 
-Protocol, HTTP and public CLI lifecycle tests cover this flow without a harness; the disposable installed Linux guest also passed local approval and versioned proxy delivery. These checks do not complete installed macOS validation or prove exclusive ownership of a same-UID host task. No named harness is a required dependency. Real-client compatibility and the joined agent-route review remain open.
+Protocol, HTTP and public CLI lifecycle tests cover this flow without a harness; the disposable installed Linux guest also passed local approval and versioned proxy delivery. These checks do not complete installed macOS validation or establish whole-agent confinement beyond connection ownership. No named harness is a required dependency. Real-client compatibility and the joined agent-route review remain open.
 
 ## Platform notes
 

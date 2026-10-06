@@ -395,10 +395,21 @@ async fn task_editor_binds_revision_and_revokes_grants() {
         target: "api.test.example.test".into(),
         arguments: json!({"command":["/usr/bin/true"],"connection_version":1}),
     };
+    let mut owner = ipc::Connection::connect(&socket).await.unwrap();
+    let created = owner
+        .call(&AgentRequest::Request {
+            operation: operation.clone(),
+        })
+        .await
+        .unwrap()
+        .data
+        .unwrap();
+    let request_id = serde_json::from_value(created["request_id"].clone()).unwrap();
     assert!(
         !ipc::call_agent(
             &socket,
             &AgentRequest::McpRequest {
+                request_id,
                 nonce: nonce.clone(),
                 operation: operation.clone()
             }
@@ -420,6 +431,7 @@ async fn task_editor_binds_revision_and_revokes_grants() {
     let task = ipc::call_agent(
         &socket,
         &AgentRequest::McpRequest {
+            request_id,
             nonce: nonce.clone(),
             operation: operation.clone(),
         },

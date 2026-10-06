@@ -115,9 +115,6 @@ enum Commands {
         broker_connection: Option<String>,
         #[arg(long)]
         broker_host: Option<String>,
-        /// Execute an already approved broker request.
-        #[arg(long)]
-        resume: Option<Uuid>,
         /// Experimental same-UID credential injection proxy. Not protected custody.
         #[arg(long)]
         proxy_preview: bool,
@@ -273,13 +270,12 @@ fn execute(cli: Cli) -> Result<u8> {
             broker,
             broker_connection,
             broker_host,
-            resume,
             proxy_preview,
             proxy_secret_env,
             proxy_host,
             command,
         } => {
-            if broker || resume.is_some() {
+            if broker {
                 ensure!(
                     !proxy_preview && proxy_secret_env.is_none() && proxy_host.is_none(),
                     "broker tasks cannot use proxy preview options"
@@ -292,7 +288,6 @@ fn execute(cli: Cli) -> Result<u8> {
                         Some(&reference.id),
                         None,
                         Some(reference.version),
-                        None,
                         &command,
                     );
                 }
@@ -305,7 +300,6 @@ fn execute(cli: Cli) -> Result<u8> {
                     broker_connection.as_deref(),
                     broker_host.as_deref(),
                     None,
-                    resume,
                     &command,
                 );
             }
@@ -327,7 +321,6 @@ fn execute(cli: Cli) -> Result<u8> {
                     Some(&reference.id),
                     None,
                     Some(reference.version),
-                    None,
                     &command,
                 );
             }
@@ -552,19 +545,14 @@ fn single_broker_connection(
 
 #[cfg(unix)]
 fn run_broker(
-    broker: bool,
+    _broker: bool,
     connection: Option<&str>,
     host: Option<&str>,
     version: Option<u64>,
-    resume: Option<Uuid>,
     command: &[String],
 ) -> Result<u8> {
     eprintln!(
         "av: Broker task request; the installed service enforces its own approval and custody policy."
-    );
-    ensure!(
-        broker != resume.is_some(),
-        "choose either --broker to request a task or --resume to execute an approved task"
     );
     let socket = std::env::var_os("AVD_AGENT_SOCKET")
         .map(PathBuf::from)
@@ -574,8 +562,15 @@ fn run_broker(
         .enable_all()
         .build()
         .context("cannot start broker client runtime")?;
+    #[cfg(target_os = "linux")]
+    ensure!(
+        unsafe { libc::prctl(libc::PR_SET_DUMPABLE, 0, 0, 0, 0) } == 0,
+        "cannot protect broker client from same-user tracing"
+    );
     runtime.block_on(async {
-        if broker {
+        let mut channel = ipc::Connection::connect(&socket).await.context("cannot connect to broker")?;
+        let pending_id;
+        {
             let connection = connection.context("--broker-connection is required")?;
             ensure!(
                 host.is_some() != version.is_some(),
@@ -588,7 +583,7 @@ fn run_broker(
                 json!({ "command": command })
             };
             let created = broker_data(
-                &socket,
+                &mut channel,
                 AgentRequest::Request {
                     operation: Operation {
                         connection: connection.to_owned(),
@@ -601,34 +596,35 @@ fn run_broker(
             .await?;
             let request_id: Uuid = serde_json::from_value(created["request_id"].clone())
                 .context("broker returned an invalid request ID")?;
+            pending_id = Some(request_id);
             println!("Pending broker request: {request_id}");
-            let link = ipc::call_agent(&socket, &AgentRequest::ApprovalLink { request_id }).await;
-            if let Ok(reply) = link
-                && reply.ok
-                && let Some(url) = reply.data.as_ref().and_then(|data| data.get("url")).and_then(|url| url.as_str())
-            {
-                println!("Review and authenticate at {url}, or call MCP review_request({request_id}). Then use `av run --resume {request_id}`.");
-            } else {
-                println!("Review with `av protected review {request_id}` and decide from an operator terminal using `av protected approve {request_id}` or `av protected deny {request_id}`. Then use `av run --resume {request_id}`.");
+            println!("Keep this process running. Review this request in the operator console or adopt it through MCP request_proxy_task.");
+            std::io::stdout().flush().context("cannot flush pending request")?;
+            let deadline = tokio::time::Instant::now() + Duration::from_secs(300);
+            loop {
+                ensure!(tokio::time::Instant::now() < deadline, "broker approval timed out");
+                let review = broker_data(&mut channel, AgentRequest::Review { request_id }).await?;
+                match review["state"].as_str() {
+                    Some("pending") => tokio::time::sleep(Duration::from_millis(250)).await,
+                    Some("denied") => bail!("broker request denied or revoked"),
+                    Some(_) => bail!("broker request is no longer executable"),
+                    None if review["state"].get("approved").is_some() => break,
+                    _ => bail!("invalid broker review"),
+                }
             }
-            return Ok(0);
         }
-
-        ensure!(
-            connection.is_none() && host.is_none() && version.is_none() && command.is_empty(),
-            "--resume accepts only the request ID"
-        );
-        let request_id = resume.context("--resume requires a request ID")?;
-        let started = broker_data(&socket, AgentRequest::Execute { request_id }).await?;
+        // The request ID is public, but this connection retains the server-side owner.
+        let request_id: Uuid = {
+            // The created request is the only execution request on this connection.
+            pending_id.context("missing broker request")?
+        };
+        let started = broker_data(&mut channel, AgentRequest::Execute { request_id }).await?;
         let task_id: Uuid = serde_json::from_value(started["task_id"].clone())
             .context("broker returned an invalid task ID")?;
         if let Some(host_proxy) = started.get("host_proxy") {
             let result = run_host_proxy_client(host_proxy, &proxy_settings).await;
             let exit_code = result.as_ref().map_or(1, |code| i32::from(*code));
-            let finished = ipc::call(
-                &socket,
-                &AgentRequest::FinishHostProxy { task_id, exit_code },
-            )
+            let finished = channel.call(&AgentRequest::FinishHostProxy { task_id, exit_code })
             .await
             .context("cannot report host proxy task outcome")
             .and_then(|reply| {
@@ -647,7 +643,7 @@ fn run_broker(
                 tokio::time::Instant::now() < deadline,
                 "broker task status timed out"
             );
-            let status = broker_data(&socket, AgentRequest::TaskStatus { task_id }).await?;
+            let status = broker_data(&mut channel, AgentRequest::TaskStatus { task_id }).await?;
             match status["state"].as_str() {
                 Some("running") => tokio::time::sleep(Duration::from_millis(250)).await,
                 Some("finished") => {
@@ -729,15 +725,15 @@ fn run_broker(
     _: Option<&str>,
     _: Option<&str>,
     _: Option<u64>,
-    _: Option<Uuid>,
     _: &[String],
 ) -> Result<u8> {
     bail!("broker IPC is unavailable on this platform; direct mode remains available")
 }
 
 #[cfg(unix)]
-async fn broker_data(socket: &Path, request: AgentRequest) -> Result<Value> {
-    let Reply { ok, data, error } = ipc::call(socket, &request)
+async fn broker_data(channel: &mut ipc::Connection, request: AgentRequest) -> Result<Value> {
+    let Reply { ok, data, error } = channel
+        .call(&request)
         .await
         .context("cannot communicate with broker")?;
     if ok {

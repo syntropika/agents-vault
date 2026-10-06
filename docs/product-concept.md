@@ -23,7 +23,7 @@ An exact-host proxy still allows potentially harmful operations on that host unl
 
 ## Approval and custody
 
-MCP offers the broker-frozen request and a local approval link. With URL elicitation, the client can offer to open the operator page; otherwise the user opens the link manually. The page verifies the vault passphrase directly with the broker before approving or denying the exact request. The private terminal route remains available. A client response alone grants no authority. The broker allows at most one bounded execution attempt. See [authenticated local approval](approval-flow.md) for the implemented synthetic flow and its remaining platform gates.
+MCP requires MCP Apps and an operator-enrolled trusted harness session. Start `av run` first; the adapter adopts its live request by public ID and exact frozen intent. The App approves or denies one bounded attempt, and the original waiting CLI executes automatically. The broker independently verifies connection ownership before execution and completion; disconnect revokes pending approvals and active grants. The local console and private operator terminal remain separate decision routes, with no automatic adapter fallback. See [local approvals and MCP Apps](approval-flow.md).
 
 The initial encrypted store uses SQLCipher, a random data key, an operator passphrase wrap, and independent offline recovery material. On Linux and macOS, a protected installation should place the broker under a hidden service identity. Windows begins with explicit direct mode. Hardware-backed unlock and external KMS are possible later, but an unlocked broker still handles usable key material in memory.
 

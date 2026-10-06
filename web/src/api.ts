@@ -30,6 +30,7 @@ const RequestStateSchema = Schema.Union([
   }),
 ]);
 export const ReviewSchema = Schema.Struct({
+  execution_session: Schema.String,
   id: Schema.String,
   operation: Schema.Struct({
     connection: Schema.String,

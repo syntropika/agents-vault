@@ -78,14 +78,13 @@ async fn local_operator_decisions_are_authenticated_bound_and_one_use() {
         target: "api.example.test".into(),
         arguments: json!({"command":command}),
     };
-    let requested = call_agent(
-        &socket,
-        &AgentRequest::Request {
+    let mut owner = avd::ipc::Connection::connect(&socket).await.unwrap();
+    let requested = owner
+        .call(&AgentRequest::Request {
             operation: operation.clone(),
-        },
-    )
-    .await
-    .unwrap();
+        })
+        .await
+        .unwrap();
     let id: Uuid = serde_json::from_value(requested.data.unwrap()["request_id"].clone()).unwrap();
     let url = format!("{origin}/requests/{id}");
     let link = call_agent(&socket, &AgentRequest::ApprovalLink { request_id: id })
@@ -205,7 +204,8 @@ async fn local_operator_decisions_are_authenticated_bound_and_one_use() {
         StatusCode::FORBIDDEN
     );
     assert_eq!(
-        call_agent(&socket, &AgentRequest::Execute { request_id: id })
+        owner
+            .call(&AgentRequest::Execute { request_id: id })
             .await
             .unwrap()
             .error
@@ -251,14 +251,12 @@ async fn local_operator_decisions_are_authenticated_bound_and_one_use() {
         RequestState::Approved { remaining: 1, .. }
     ));
 
-    let next = call_agent(
-        &socket,
-        &AgentRequest::Request {
+    let next = owner
+        .call(&AgentRequest::Request {
             operation: operation.clone(),
-        },
-    )
-    .await
-    .unwrap();
+        })
+        .await
+        .unwrap();
     let next_id: Uuid = serde_json::from_value(next.data.unwrap()["request_id"].clone()).unwrap();
     let next_url = format!("{origin}/requests/{next_id}");
     let page = hyper::body::to_bytes(

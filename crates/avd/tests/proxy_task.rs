@@ -152,6 +152,7 @@ async fn approved_fixture_task_injects_synthetic_secret_and_cannot_be_replayed()
         );
     }
     write_policy(&policy_path, &policy);
+    let owner = avd::ExecutionSession::new();
     let broker = Arc::new(Broker::from_vault_with_proxy_policy(&vault, &policy_path).unwrap());
     drop(vault);
     let operation = Operation {
@@ -162,14 +163,23 @@ async fn approved_fixture_task_injects_synthetic_secret_and_cannot_be_replayed()
     };
     let mut altered = operation.clone();
     altered.target = "other.example.test".into();
-    assert_eq!(broker.request(altered), Err(BrokerError::InvalidOperation));
+    assert_eq!(
+        broker.request(&owner, altered),
+        Err(BrokerError::InvalidOperation)
+    );
     let mut altered = operation.clone();
     altered.arguments = json!({"command": ["/usr/bin/curl", "https://other.example.test/"]});
-    assert_eq!(broker.request(altered), Err(BrokerError::InvalidOperation));
+    assert_eq!(
+        broker.request(&owner, altered),
+        Err(BrokerError::InvalidOperation)
+    );
     let mut altered = operation.clone();
     altered.arguments = json!({"command": command, "max_requests": 999});
-    assert_eq!(broker.request(altered), Err(BrokerError::InvalidOperation));
-    let id = broker.request(operation.clone()).unwrap();
+    assert_eq!(
+        broker.request(&owner, altered),
+        Err(BrokerError::InvalidOperation)
+    );
+    let id = broker.request(&owner, operation.clone()).unwrap();
     let review = broker.review(id).unwrap();
     assert_eq!(review.operation, operation);
     let bounds = review.task_policy.expect("broker-owned policy snapshot");
@@ -182,23 +192,23 @@ async fn approved_fixture_task_injects_synthetic_secret_and_cannot_be_replayed()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_secs();
-    let denied = broker.request(operation.clone()).unwrap();
+    let denied = broker.request(&owner, operation.clone()).unwrap();
     broker.decide(denied, false, now, 0).unwrap();
     assert_eq!(
-        broker.execute_or_start(denied, now).await,
+        broker.execute_or_start(&owner, denied, now).await,
         Err(BrokerError::Denied)
     );
     assert_eq!(
-        broker.execute_or_start(id, now).await,
+        broker.execute_or_start(&owner, id, now).await,
         Err(BrokerError::NotApproved)
     );
     broker.decide(id, true, now, 30).unwrap();
-    let started = broker.execute_or_start(id, now).await.unwrap();
+    let started = broker.execute_or_start(&owner, id, now).await.unwrap();
     assert_eq!(started["state"], "running");
     assert_eq!(started["task_id"], id.to_string());
     assert!(!started.to_string().contains(SECRET));
     assert_eq!(
-        broker.execute_or_start(id, now).await,
+        broker.execute_or_start(&owner, id, now).await,
         Err(BrokerError::QuotaExhausted)
     );
     let finished = tokio::time::timeout(
@@ -325,6 +335,7 @@ async fn versioned_connection_reaches_synthetic_provider_only_after_approval() {
             },
         )
         .unwrap();
+    let owner = avd::ExecutionSession::new();
     let broker =
         Arc::new(Broker::from_vault_with_proxy_policy(&created.vault, &policy_path).unwrap());
     let operation = Operation {
@@ -335,8 +346,11 @@ async fn versioned_connection_reaches_synthetic_provider_only_after_approval() {
     };
     let mut stale = operation.clone();
     stale.arguments["connection_version"] = json!(2);
-    assert_eq!(broker.request(stale), Err(BrokerError::InvalidOperation));
-    let id = broker.request(operation).unwrap();
+    assert_eq!(
+        broker.request(&owner, stale),
+        Err(BrokerError::InvalidOperation)
+    );
+    let id = broker.request(&owner, operation).unwrap();
     let review = broker.review(id).unwrap();
     assert_eq!(review.operation.target, HOST);
     assert_eq!(review.task_policy.unwrap().connection_version, Some(1));
@@ -345,7 +359,7 @@ async fn versioned_connection_reaches_synthetic_provider_only_after_approval() {
         .unwrap()
         .as_secs();
     assert_eq!(
-        broker.execute_or_start(id, now).await,
+        broker.execute_or_start(&owner, id, now).await,
         Err(BrokerError::NotApproved)
     );
     let (seen_tx, seen_rx) = oneshot::channel::<String>();
@@ -375,7 +389,7 @@ async fn versioned_connection_reaches_synthetic_provider_only_after_approval() {
             .unwrap();
     });
     broker.decide(id, true, now, 30).unwrap();
-    let started = broker.execute_or_start(id, now).await.unwrap();
+    let started = broker.execute_or_start(&owner, id, now).await.unwrap();
     assert!(!started.to_string().contains(SECRET));
     let details = &started["host_proxy"];
     let ca_file = directory.path().join("interception-ca.pem");
@@ -403,7 +417,7 @@ async fn versioned_connection_reaches_synthetic_provider_only_after_approval() {
         String::from_utf8_lossy(&output.stderr)
     );
     assert_eq!(seen_rx.await.unwrap(), format!("Bearer {SECRET}"));
-    broker.finish_host_proxy(id, 0).unwrap();
+    broker.finish_host_proxy(&owner, id, 0).unwrap();
     provider_task.abort();
     broker.shutdown().await;
     drop(broker);
@@ -453,6 +467,7 @@ async fn concurrent_host_tasks_revoke_independently_and_expire() {
             "max_requests": 2, "max_runtime_seconds": 2, "host_client": true
         }),
     );
+    let owner = avd::ExecutionSession::new();
     let broker =
         Arc::new(Broker::from_vault_with_proxy_policy(&created.vault, &policy_path).unwrap());
     let now = std::time::SystemTime::now()
@@ -462,15 +477,18 @@ async fn concurrent_host_tasks_revoke_independently_and_expire() {
     let mut tasks = Vec::new();
     for _ in 0..2 {
         let id = broker
-            .request(Operation {
-                connection: "demo/work".into(),
-                action: "proxy.run".into(),
-                target: HOST.into(),
-                arguments: json!({"command": command}),
-            })
+            .request(
+                &owner,
+                Operation {
+                    connection: "demo/work".into(),
+                    action: "proxy.run".into(),
+                    target: HOST.into(),
+                    arguments: json!({"command": command}),
+                },
+            )
             .unwrap();
         broker.decide(id, true, now, 30).unwrap();
-        let started = broker.execute_or_start(id, now).await.unwrap();
+        let started = broker.execute_or_start(&owner, id, now).await.unwrap();
         let url = started["host_proxy"]["proxy_url"].as_str().unwrap();
         let token = url
             .strip_prefix("http://av:")
@@ -492,7 +510,7 @@ async fn concurrent_host_tasks_revoke_independently_and_expire() {
             .await
             .starts_with("HTTP/1.1 200")
     );
-    broker.finish_host_proxy(tasks[0].0, 0).unwrap();
+    broker.finish_host_proxy(&owner, tasks[0].0, 0).unwrap();
     tokio::time::timeout(Duration::from_secs(2), async {
         while broker.task_status(tasks[0].0).unwrap().state == TaskState::Running {
             tokio::time::sleep(Duration::from_millis(10)).await;
@@ -678,22 +696,26 @@ async fn task_deadline_stops_descendant_activity() {
         policy["runner_helper"] = json!(helper);
     }
     write_policy(&policy_path, &policy);
+    let owner = avd::ExecutionSession::new();
     let broker =
         Arc::new(Broker::from_vault_with_proxy_policy(&created.vault, &policy_path).unwrap());
     let id = broker
-        .request(Operation {
-            connection: "demo/fixture".into(),
-            action: "proxy.run".into(),
-            target: HOST.into(),
-            arguments: json!({"command": command}),
-        })
+        .request(
+            &owner,
+            Operation {
+                connection: "demo/fixture".into(),
+                action: "proxy.run".into(),
+                target: HOST.into(),
+                arguments: json!({"command": command}),
+            },
+        )
         .unwrap();
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_secs();
     broker.decide(id, true, now, 5).unwrap();
-    broker.execute_or_start(id, now).await.unwrap();
+    broker.execute_or_start(&owner, id, now).await.unwrap();
     let status = tokio::time::timeout(Duration::from_secs(5), async {
         loop {
             let status = broker.task_status(id).unwrap();
