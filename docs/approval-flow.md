@@ -56,13 +56,13 @@ The configured harness is trusted to distinguish operator App interactions from 
 
 The adapter reviews only existing requests explicitly adopted by its enrolled session with matching intent. Adoption does not change the execution owner and a second enrollment cannot steal an adopted request. The authenticated console and private terminal can also decide live CLI requests. Revoking MCP enrollment prevents further decisions; it does not cancel an already-approved attempt. Closing the original execution connection or **Pause and lock** revokes execution.
 
-The public-ID execution and completion takeover is fixed by broker-owned live connection authority. The public session UUID is included in review and decision digests, but cannot authorize another connection. This does not prevent deliberate socket transfer, retained descriptors after original process death, or capability copying from a compromised approved command. The proxy prototype still requires synthetic credentials.
+The public-ID execution and completion takeover is fixed by broker-owned live connection authority. The public session UUID is included in review and decision digests, but cannot authorize another connection. This does not prevent deliberate socket transfer, retained descriptors after original process death, or capability copying from a compromised approved command. The proxy still requires synthetic credentials.
 
 ## Active action editor
 
 An action is a saved command recipe: executable, exact arguments, credential, destination and limits. Saving it does not execute or approve it. The Actions page configures one active host-proxy action per broker. Multiple simultaneously active recipes are not implemented. The operator selects an existing active credential; its exact host and current version are derived by the broker. The executable is an absolute executable file. Each argument is a separate field and preserves spaces, empty values, and line breaks without invoking a shell. Limits remain bounded to 1–60 seconds, 1–16 HTTP requests, and 1–8 connections.
 
-The prototype still requires a synthetic loopback test upstream and an absolute CA file. It does not enable arbitrary production providers. Installed services validate trusted executable and CA paths. Guest recipes remain installer-managed. Policy saves compare a SHA-256 revision, preventing a stale browser from overwriting another edit.
+The implementation still requires a synthetic loopback test upstream and an absolute CA file. It does not enable arbitrary production providers. Installed services validate trusted executable and CA paths. Guest recipes remain installer-managed. Policy saves compare a SHA-256 revision, preventing a stale browser from overwriting another edit.
 
 The policy uses the deployment's configured path. Without a configured policy path, the default is the vault path with the extension changed to `proxy.json`, in the private broker-owned vault directory. Linux validates this derived policy on unlock. macOS installed deployments still require the fixed installed policy path. Recipe changes are read at the next unlock, after explicit permission is granted again.
 

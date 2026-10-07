@@ -1,6 +1,6 @@
 # macOS guest and offline package
 
-This Apple silicon prototype packages a Linux fixture command and runs it with
+This Apple silicon implementation packages a Linux fixture command and runs it with
 Virtualization.framework. An installed Mac needs no Docker, QEMU, Homebrew,
 Linux installation, or image download. The package has not yet passed Developer
 ID signing, notarization, or an installed acceptance test.

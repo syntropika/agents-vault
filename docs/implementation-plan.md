@@ -1,6 +1,6 @@
 # Implementation plan
 
-Status: active plan for the provider-neutral prototype, updated 2026-10-04. This is a sequence of implementation and evidence gates, not a declaration that protected custody is already available.
+Status: active plan for the provider-neutral CLI, updated 2026-10-04. This is a sequence of implementation and evidence gates, not a declaration that protected custody is already available.
 
 ## Target architecture
 

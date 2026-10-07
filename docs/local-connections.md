@@ -48,7 +48,7 @@ For the synthetic host-proxy path, an operator installs a private recipe with `c
 
 ## Broker task lifecycle
 
-The prototype registers a configured command and host, then requires a decision before execution. A project may declare one proxy connection reference:
+The implementation registers a configured command and host, then requires a decision before execution. A project may declare one proxy connection reference:
 
 ```toml
 schema = 2

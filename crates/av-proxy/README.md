@@ -1,4 +1,4 @@
-# `av-proxy` prototype
+# `av-proxy`
 
 This Rust crate demonstrates broker-created task grants flowing through an
 HTTPS CONNECT proxy. A client connects with `Proxy-Authorization: Bearer TOKEN`

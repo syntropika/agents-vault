@@ -108,14 +108,14 @@ enum Commands {
     Run {
         #[arg(long)]
         env: Option<String>,
-        /// Register an experimental synthetic proxy task for operator approval.
+        /// Register a synthetic proxy task for operator approval.
         #[arg(long)]
         broker: bool,
         #[arg(long)]
         broker_connection: Option<String>,
         #[arg(long)]
         broker_host: Option<String>,
-        /// Experimental same-UID credential injection proxy. Not protected custody.
+        /// Same-UID credential injection proxy. Not protected custody.
         #[arg(long)]
         proxy_preview: bool,
         #[arg(long, requires = "proxy_preview")]
@@ -826,7 +826,7 @@ fn preview_selection(
 
 fn preview_disclosure(command: &[String], selection: &PreviewSelection, host: &str) -> String {
     format!(
-        "av: EXPERIMENTAL proxy preview for {command:?}; {} uses a placeholder and HTTPS injection for exact host {host}. This is NOT protected custody: the child and agent share the user identity, network egress is not confined, and there is no MCP approval. A child can bypass this proxy; exact-host matching permits any path or action on that host; and the provider may reflect the injected credential. The child receives a minimal environment plus configured values and proxy settings. Upstream TLS uses bundled WebPKI public roots, or an explicit synthetic test CA in test builds. Only use a test credential for this prototype.",
+        "av: proxy preview for {command:?}; {} uses a placeholder and HTTPS injection for exact host {host}. This is NOT protected custody: the child and agent share the user identity, network egress is not confined, and there is no MCP approval. A child can bypass this proxy; exact-host matching permits any path or action on that host; and the provider may reflect the injected credential. The child receives a minimal environment plus configured values and proxy settings. Upstream TLS uses bundled WebPKI public roots, or an explicit synthetic test CA in test builds. Only use a test credential for this implementation.",
         selection.env_name,
     )
 }

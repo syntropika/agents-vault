@@ -1,10 +1,10 @@
-//! A deliberately narrow HTTPS credential injection proxy prototype.
+//! A deliberately narrow HTTPS credential injection proxy.
 //!
 //! The fixed proxy can route bounded concurrent task capabilities, each with
 //! one exact CONNECT host and HTTP/1.1 requests within its TLS tunnel. The host broker must keep the
 //! proxy listener and grant minting out of reach of an untrusted agent. This
 //! crate itself does not establish an OS-level trust boundary or egress policy.
-//! The bearer token alone is only prototype authentication. Protected mode
+//! The bearer token alone is only capability authentication. Protected mode
 //! must bind it to a broker-authenticated runner or VM transport identity.
 
 use base64::Engine;
@@ -89,7 +89,7 @@ impl fmt::Debug for CredentialInjection {
 }
 
 /// Every host binding is explicit. The upstream socket is pinned for this
-/// prototype; certificate verification still uses `allowed_host` as the SNI
+/// implementation; certificate verification still uses `allowed_host` as the SNI
 /// and TLS server name, not the socket IP.
 pub struct ProxyConfig {
     pub bind_addr: SocketAddr,
@@ -398,9 +398,7 @@ fn make_shared(
         return Err(ProxyError::InvalidConfig("allowed_port must be nonzero"));
     }
     if !config.bind_addr.ip().is_loopback() {
-        return Err(ProxyError::InvalidConfig(
-            "prototype listener must be loopback",
-        ));
+        return Err(ProxyError::InvalidConfig("proxy listener must be loopback"));
     }
     if config.grant.bearer_token.is_empty()
         || !config.grant.bearer_token.is_ascii()

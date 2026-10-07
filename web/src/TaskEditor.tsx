@@ -179,7 +179,7 @@ export function TaskEditor({
           <details open={!recipe} className="task-transport">
             <summary>Test destination</summary>
             <p className="field-hint">
-              This prototype supports a local test server and synthetic credentials.
+              This implementation supports a local test server and synthetic credentials.
             </p>
             <label htmlFor="task-upstream">Local server address</label>
             <input

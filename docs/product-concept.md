@@ -1,6 +1,6 @@
 # Product concept
 
-Status: product direction. The [prototype status](prototype-status.md) separates implemented behavior from release claims.
+Status: product direction. The [implementation status](implementation-status.md) separates implemented behavior from release claims.
 
 ## Goal
 

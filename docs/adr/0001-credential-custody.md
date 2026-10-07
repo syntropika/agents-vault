@@ -15,7 +15,7 @@ Status: Proposed baseline; the default macOS execution choice is superseded by [
 - Use an application-managed SQLCipher store. A random database key is wrapped independently by an operator passphrase and an offline recovery key. On Linux and macOS, non-login service identities own the protected stores; on Windows the first CLI release uses the encrypted format only for explicit direct delivery, without a same-user isolation claim.
 - Start with protected host brokers on Linux and macOS. The Linux proxy command uses a confined host runner if its tests pass. The first macOS proxy task uses a Linux-compatible CLI in a no-NIC guest managed through Apple Virtualization.framework; the host broker retains the credential and proxies traffic over a private service channel. KVM is not a prerequisite for either platform.
 - Permit the agent and operator to share a host login UID only when every agent-controlled tool is sandboxed away from the broker, trusted harness approval channel, operator control channel, and unrestricted host execution. Isolating only the `av run` child is insufficient.
-- Treat a request ID as a lookup handle. The current prototype requires a private, passphrase-checked operator decision for a one-shot grant bound to immutable intent. A generic MCP permission or app-only tool is insufficient. A future harness approval channel requires independent authentication.
+- Treat a request ID as a lookup handle. The current implementation requires a private, passphrase-checked operator decision for a one-shot grant bound to immutable intent. A generic MCP permission or app-only tool is insufficient. A future harness approval channel requires independent authentication.
 
 ## Validation required before acceptance
 

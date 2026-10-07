@@ -1,6 +1,6 @@
-# Prototype status
+# Implementation status
 
-Status: Rust prototype in progress, updated 2026-10-06. This report separates demonstrated component behavior from the intended protected release. The workspace cleanup removed provider-specific actions and a harness launcher; historical tests of those paths are not current product features.
+Status: Rust implementation in progress, updated 2026-10-06. This report separates demonstrated component behavior from the intended protected release. The workspace cleanup removed provider-specific actions and a harness launcher; historical tests of those paths are not current product features.
 
 ## Demonstrated behavior
 
@@ -14,7 +14,7 @@ Status: Rust prototype in progress, updated 2026-10-06. This report separates de
 | Broker and MCP | Immutable requests, MCP Apps capability negotiation and enrolled-session decisions, authenticated local-page and private-terminal decisions, denial, and one-use attempts have component tests. An unenrolled session cannot decide; another session, altered intent and replay are rejected. An installed Linux systemd/AppArmor guest passed private terminal decisions and local-page approval/denial, rejecting a wrong passphrase, cross-origin submission and form replay before public CLI execution. Public socket tests reject administrative operations even when an agent supplies an admin token and passphrase. | Execution requires the original live connection. Linux/macOS tests cover foreign Execute/Finish, reconnection and disconnect revocation. Installed macOS validation and a joined audit of every agent-controlled route remain open. The authenticated local operator page and MCP Apps capability negotiation and enrolled-session decisions are implemented with synthetic protocol and HTTP tests; installed macOS and real-client compatibility remain open. |
 | Linux runner | Synthetic installed-service and network-isolation tests exercised broker-owned fixture actions and a versioned host-proxy connection on a disposable systemd/AppArmor VM. | The joined whole-agent/approval boundary and broader host compatibility remain open. |
 | macOS guest | A development no-NIC guest reached a local synthetic proxy through Apple Virtualization.framework. | This is an optional isolation experiment rather than the default path for native macOS CLIs. Signed installed service and package lifecycle remain open. |
-| Packaging | Prototype Linux and macOS package scripts exist; Windows direct cross-build work exists. The Mac package script rejects its fixture-only guest unless a synthetic test override is set. | The Mac guest cannot yet execute a generic packaged CLI. Native Windows execution and production macOS signing remain open. |
+| Packaging | Early Linux and macOS package scripts exist; Windows direct cross-build work exists. The Mac package script rejects its fixture-only guest unless a synthetic test override is set. | The Mac guest cannot yet execute a generic packaged CLI. Native Windows execution and production macOS signing remain open. |
 
 ## Security findings
 

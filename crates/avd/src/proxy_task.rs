@@ -173,7 +173,7 @@ impl ProxyPolicy {
         } else {
             ensure!(
                 self.connection.starts_with("demo/") && self.connection.len() <= 130,
-                "proxy prototype only accepts a demo connection"
+                "proxy only accepts a demo connection"
             );
             ensure!(
                 self.secret_name.starts_with("demo/") && self.secret_name.len() <= 130,
@@ -214,7 +214,7 @@ impl ProxyPolicy {
             (1..=8).contains(&self.max_connects)
                 && (1..=16).contains(&self.max_requests)
                 && (1..=60).contains(&self.max_runtime_seconds),
-            "prototype task limits exceed the supported bounds"
+            "action limits exceed the supported bounds"
         );
         #[cfg(target_os = "linux")]
         if let Some(helper) = &self.runner_helper {
@@ -425,7 +425,7 @@ impl ProxyRuntime {
         };
         ensure!(
             secret.starts_with("av-synthetic-") && secret.len() <= 256,
-            "proxy prototype only accepts av-synthetic- credentials"
+            "proxy only accepts av-synthetic- credentials"
         );
         ensure!(
             policy

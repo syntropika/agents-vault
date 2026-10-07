@@ -1,6 +1,6 @@
 # Windows direct CLI package
 
-This prototype distributes the x64 Windows `av` CLI as one offline zip. The
+This implementation distributes the x64 Windows `av` CLI as one offline zip. The
 release recipe uses bundled SQLCipher/OpenSSL and a static C runtime; installation needs
 Windows PowerShell 5.1 or PowerShell 7, with no Rust toolchain, service account,
 VM, or runtime download. Windows support is direct delivery: the child process
@@ -11,7 +11,7 @@ Native Windows tests and package installation must pass before release. The
 workflow is prepared, but has not run from this repository yet. Linux cross
 compilation and PowerShell syntax/package checks do not establish native Windows
 behavior. The initial CI target is Windows Server 2022 x64; desktop Windows and
-Authenticode signing remain release gates. This prototype is unsigned.
+Authenticode signing remain release gates. This implementation is unsigned.
 
 ## Build the archive
 
@@ -59,7 +59,7 @@ Run under your normal user account. The default destination is
 absolute path to a dedicated directory. Add that directory to your user PATH
 in Windows Settings if you want to invoke `av` by name, then open a new terminal.
 The scripts do not change execution policy. If policy blocks the unsigned
-prototype, use your organization's approved script review and signing process.
+implementation, use your organization's approved script review and signing process.
 
 To update, extract a new archive to a separate directory, close running `av`
 processes, and invoke its installer with the same installation directory. The

@@ -11,7 +11,7 @@ cargo build --locked -p av --bin av
 ./target/debug/av --help
 ```
 
-The executable is `target/debug/av`. The commands below use `av`; use its absolute path or add that directory to your shell's `PATH` before changing directories. There is no package-manager installation claim in this guide. Platform evidence and prototype packaging are listed in [prototype status](../prototype-status.md).
+The executable is `target/debug/av`. The commands below use `av`; use its absolute path or add that directory to your shell's `PATH` before changing directories. There is no package-manager installation claim in this guide. Platform evidence and packaging progress are listed in [implementation status](../implementation-status.md).
 
 ## Run public configuration
 

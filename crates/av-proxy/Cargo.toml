@@ -2,7 +2,7 @@
 name = "av-proxy"
 version = "0.1.0"
 edition = "2024"
-description = "Bounded HTTPS credential injection proxy prototype for Agents Vault"
+description = "Bounded HTTPS credential injection proxy for Agents Vault"
 license = "Apache-2.0"
 
 [dependencies]
