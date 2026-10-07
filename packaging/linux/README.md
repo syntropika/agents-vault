@@ -12,7 +12,7 @@ This is an experimental component; real proxy credentials remain rejected.
 Build and stage the installer without changing host accounts or services:
 
 ```sh
-cargo build --release -p av -p avd -p av-runner --bins
+cargo build --release -p agents-vault -p avd -p av-runner --bins
 packaging/linux/install.sh --bin-dir "$PWD/target/release" --agent-uid "$(id -u)" --destdir /tmp/av-install-review
 ```
 
@@ -139,7 +139,7 @@ both orderly restart and broker/runner SIGKILL recovery under systemd PID 1.
 
 ```sh
 cargo test -p avd -p av-runner
-cargo build -p av -p avd -p av-runner --bins --examples
+cargo build -p agents-vault -p avd -p av-runner --bins --examples
 ```
 
 The Docker image runs the real installer, syntax-checks both systemd units and
@@ -185,7 +185,7 @@ operations remain inside the guest; the host's services and policy are not
 changed. Image construction downloads distribution packages.
 
 ```sh
-cargo build --release -p av -p avd -p av-runner -p av-fixture --bins --examples
+cargo build --release -p agents-vault -p avd -p av-runner -p av-fixture --bins --examples
 packaging/linux/run-systemd-tests.sh --bin-dir "$PWD/target/release" \
   --artifact-dir /absolute/new/external-artifact-directory
 ```

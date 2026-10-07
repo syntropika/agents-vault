@@ -13,3 +13,7 @@
 /.impeccable/build/
 /.impeccable/questions/
 /web/dist-mcp/
+
+/crates/avd/assets/
+/crates/av-mcp/assets/
+/crates/*/LICENSE

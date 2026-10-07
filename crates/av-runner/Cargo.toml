@@ -5,6 +5,10 @@ edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 description = "Experimental Linux network-isolated CLI runner primitive"
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+include = ["src/**", "tests/**", "examples/**", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE"]
 
 [dependencies]
 libc = "0.2"

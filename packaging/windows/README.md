@@ -19,7 +19,7 @@ On an x64 Windows build machine with Rust and the MSVC C toolchain:
 
 ```powershell
 $env:RUSTFLAGS = '-C target-feature=+crt-static'
-cargo build --locked --release --target x86_64-pc-windows-msvc -p av
+cargo build --locked --release --target x86_64-pc-windows-msvc -p agents-vault
 if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
 .\packaging\windows\make-package.ps1 `
     -Binary .\target\x86_64-pc-windows-msvc\release\av.exe `
@@ -90,7 +90,7 @@ desired. Unexpected or changed files cause removal to stop for inspection.
 ## Verification
 
 ```powershell
-cargo test --locked -p av-core -p av --all-targets
+cargo test --locked -p av-core -p agents-vault --all-targets
 if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
 .\packaging\windows\test-package.ps1 `
     -Binary .\target\x86_64-pc-windows-msvc\release\av.exe

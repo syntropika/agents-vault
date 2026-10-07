@@ -42,7 +42,7 @@ jobs:
             windows-direct-${{ runner.arch }}-${{ steps.rust.outputs.version }}-${{ hashFiles('Cargo.lock') }}-
       - name: Build and test direct-mode crates
         shell: pwsh
-        run: cargo test --locked --release --target x86_64-pc-windows-msvc -p av-core -p av --all-targets
+        run: cargo test --locked --release --target x86_64-pc-windows-msvc -p av-core -p agents-vault --all-targets
       - name: Save Rust build cache
         if: always() && steps.rust-cache.outputs.cache-hit != 'true' && steps.rust-cache.outputs.cache-primary-key != ''
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
@@ -54,7 +54,7 @@ jobs:
           key: ${{ steps.rust-cache.outputs.cache-primary-key }}
       - name: Build the offline CLI
         shell: powershell
-        run: cargo build --locked --release --target x86_64-pc-windows-msvc -p av
+        run: cargo build --locked --release --target x86_64-pc-windows-msvc -p agents-vault
       - name: Verify offline package lifecycle in Windows PowerShell 5.1
         shell: powershell
         run: |
@@ -72,7 +72,7 @@ jobs:
         run: |
           $metadata = cargo metadata --locked --no-deps --format-version 1 | ConvertFrom-Json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $version = ($metadata.packages | Where-Object { $_.name -eq 'av' }).version
+          $version = ($metadata.packages | Where-Object { $_.name -eq 'agents-vault' }).version
           .\packaging\windows\make-package.ps1 -Binary .\target\x86_64-pc-windows-msvc\release\av.exe -Version $version -OutputDirectory "$env:RUNNER_TEMP\agents-vault-packages"
       - uses: actions/upload-artifact@v4
         with:

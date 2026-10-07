@@ -5,7 +5,7 @@ Status: provider-neutral core after the 2026-10-04 cleanup. The workspace contai
 | Crate | Responsibility |
 | --- | --- |
 | `av-core` | Project schema, dotenv import, vault policy and versioned connections, storage adapter contract, and the initial SQLCipher adapter. |
-| `av-cli` (binary `av`) | Project commands, local credential and connection management, direct run, proxy preview, protected operator client, and broker task client. |
+| `agents-vault` (directory `av-cli`, binary `av`) | Project commands, local credential and connection management, direct run, proxy preview, protected operator client, and broker task client. |
 | `avd` | Broker-owned requests, authenticated local approval, connection administration, shared task supervision, platform task launch, and separate agent/operator IPC. |
 | `av-proxy` | HTTPS CONNECT transport, exact-host and TLS checks, credential insertion, and bounded request handling. |
 | `av-runner` | Linux child execution and network isolation primitive. |

@@ -3,9 +3,16 @@ name = "av-mcp"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.88"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "MCP Apps approval adapter for Agents Vault"
+readme.workspace = true
+include = ["src/**", "tests/**", "examples/**", "build.rs", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "assets/**"]
 
 [dependencies]
-avd = { path = "../avd" }
+avd = { version = "0.1.0", path = "../avd" }
 rmcp = { version = "3.5", features = ["transport-io", "client"] }
 rand = "0.9"
 hex = "0.4"
@@ -18,6 +25,6 @@ uuid = { version = "1", features = ["serde"] }
 [dev-dependencies]
 hyper = { version = "0.14", features = ["client", "tcp", "http1"] }
 libc = "0.2"
-av-core = { path = "../av-core" }
+av-core = { version = "0.1.0", path = "../av-core" }
 rcgen = "0.14"
 tempfile = "3"

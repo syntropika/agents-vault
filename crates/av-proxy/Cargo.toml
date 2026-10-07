@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2024"
 description = "Bounded HTTPS credential injection proxy for Agents Vault"
 license = "Apache-2.0"
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+include = ["src/**", "tests/**", "examples/**", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE"]
 
 [dependencies]
 base64 = "0.22"

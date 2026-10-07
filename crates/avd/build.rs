@@ -1,7 +1,13 @@
 use std::{env, fs, path::Path};
 
 fn main() {
-    let root = Path::new("../../web/dist");
+    let packaged = Path::new("assets");
+    let root = if packaged.is_dir() {
+        packaged
+    } else {
+        Path::new("../../web/dist")
+    };
+    println!("cargo:rerun-if-changed=assets");
     println!("cargo:rerun-if-changed=../../web/dist");
     let mut entries = Vec::new();
     fn collect(root: &Path, directory: &Path, entries: &mut Vec<(String, String)>) {

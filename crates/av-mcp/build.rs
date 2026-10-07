@@ -1,6 +1,12 @@
 use std::{env, fs, path::Path};
 fn main() {
-    let path = Path::new("../../web/dist-mcp/mcp-app.html");
+    let packaged = Path::new("assets/mcp-app.html");
+    let path = if packaged.is_file() {
+        packaged
+    } else {
+        Path::new("../../web/dist-mcp/mcp-app.html")
+    };
+    println!("cargo:rerun-if-changed=assets/mcp-app.html");
     println!("cargo:rerun-if-changed=../../web/dist-mcp/mcp-app.html");
     let content = if path.is_file() && !path.is_symlink() {
         format!(
