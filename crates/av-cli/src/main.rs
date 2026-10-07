@@ -1758,12 +1758,16 @@ mod tests {
             .output()
             .await
             .expect("curl is required for the TLS interoperability regression test");
-        server.await.unwrap();
+        if !output.status.success() {
+            server.abort();
+        }
         assert!(
             output.status.success(),
-            "curl rejected the preview certificate: {}",
+            "curl rejected the preview certificate ({}): {}",
+            output.status,
             String::from_utf8_lossy(&output.stderr)
         );
+        server.await.unwrap();
         assert_eq!(output.stdout, b"ok");
     }
 
