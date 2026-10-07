@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-06T02:05:27.096476+00:00",
+  "generatedAt": "2026-10-07T08:37:17.705462Z",
   "title": "Design System: Agents Vault",
   "extensions": {
     "colorMeta": {
@@ -283,6 +283,104 @@
           "oklch(84% 0.00000 0.00)",
           "oklch(95% 0.00000 0.00)"
         ]
+      },
+      "website-accent": {
+        "role": "primary",
+        "displayName": "Ice Blue",
+        "tonalRamp": [
+          "oklch(15% 0.08862 249.93)",
+          "oklch(26% 0.08862 249.93)",
+          "oklch(38% 0.08862 249.93)",
+          "oklch(49% 0.08862 249.93)",
+          "oklch(61% 0.08862 249.93)",
+          "oklch(72% 0.08862 249.93)",
+          "oklch(84% 0.08862 249.93)",
+          "oklch(95% 0.08862 249.93)"
+        ]
+      },
+      "website-accent-hover": {
+        "role": "primary",
+        "displayName": "Ice Blue Hover",
+        "tonalRamp": [
+          "oklch(15% 0.06353 247.84)",
+          "oklch(26% 0.06353 247.84)",
+          "oklch(38% 0.06353 247.84)",
+          "oklch(49% 0.06353 247.84)",
+          "oklch(61% 0.06353 247.84)",
+          "oklch(72% 0.06353 247.84)",
+          "oklch(84% 0.06353 247.84)",
+          "oklch(95% 0.06353 247.84)"
+        ]
+      },
+      "website-accent-surface": {
+        "role": "neutral",
+        "displayName": "Blue Surface",
+        "tonalRamp": [
+          "oklch(15% 0.03171 248.91)",
+          "oklch(26% 0.03171 248.91)",
+          "oklch(38% 0.03171 248.91)",
+          "oklch(49% 0.03171 248.91)",
+          "oklch(61% 0.03171 248.91)",
+          "oklch(72% 0.03171 248.91)",
+          "oklch(84% 0.03171 248.91)",
+          "oklch(95% 0.03171 248.91)"
+        ]
+      },
+      "website-accent-ink": {
+        "role": "primary",
+        "displayName": "Blue Ink",
+        "tonalRamp": [
+          "oklch(15% 0.03578 254.17)",
+          "oklch(26% 0.03578 254.17)",
+          "oklch(38% 0.03578 254.17)",
+          "oklch(49% 0.03578 254.17)",
+          "oklch(61% 0.03578 254.17)",
+          "oklch(72% 0.03578 254.17)",
+          "oklch(84% 0.03578 254.17)",
+          "oklch(95% 0.03578 254.17)"
+        ]
+      },
+      "website-light-accent": {
+        "role": "primary",
+        "displayName": "Reading Blue",
+        "tonalRamp": [
+          "oklch(15% 0.10526 250.86)",
+          "oklch(26% 0.10526 250.86)",
+          "oklch(38% 0.10526 250.86)",
+          "oklch(49% 0.10526 250.86)",
+          "oklch(61% 0.10526 250.86)",
+          "oklch(72% 0.10526 250.86)",
+          "oklch(84% 0.10526 250.86)",
+          "oklch(95% 0.10526 250.86)"
+        ]
+      },
+      "website-light-accent-low": {
+        "role": "neutral",
+        "displayName": "Light Blue Surface",
+        "tonalRamp": [
+          "oklch(15% 0.02342 256.10)",
+          "oklch(26% 0.02342 256.10)",
+          "oklch(38% 0.02342 256.10)",
+          "oklch(49% 0.02342 256.10)",
+          "oklch(61% 0.02342 256.10)",
+          "oklch(72% 0.02342 256.10)",
+          "oklch(84% 0.02342 256.10)",
+          "oklch(95% 0.02342 256.10)"
+        ]
+      },
+      "website-light-accent-high": {
+        "role": "primary",
+        "displayName": "Deep Reading Blue",
+        "tonalRamp": [
+          "oklch(15% 0.07723 250.94)",
+          "oklch(26% 0.07723 250.94)",
+          "oklch(38% 0.07723 250.94)",
+          "oklch(49% 0.07723 250.94)",
+          "oklch(61% 0.07723 250.94)",
+          "oklch(72% 0.07723 250.94)",
+          "oklch(84% 0.07723 250.94)",
+          "oklch(95% 0.07723 250.94)"
+        ]
       }
     },
     "typographyMeta": {
@@ -313,6 +411,26 @@
       "caption": {
         "displayName": "Caption",
         "purpose": "Settings descriptions, field hints, footer notes, and limits metadata."
+      },
+      "website-display": {
+        "displayName": "Public Display",
+        "purpose": "Large landing heading."
+      },
+      "website-headline": {
+        "displayName": "Public Headline",
+        "purpose": "Public section headings."
+      },
+      "website-body": {
+        "displayName": "Public Body",
+        "purpose": "Longer public explanatory copy."
+      },
+      "website-action": {
+        "displayName": "Public Action",
+        "purpose": "Public primary call to action."
+      },
+      "website-code": {
+        "displayName": "Public Configuration",
+        "purpose": "Readable project configuration and placeholder output."
       }
     },
     "shadows": [],
@@ -326,6 +444,11 @@
         "name": "pressed-scale",
         "value": "scale(0.98)",
         "purpose": "Enabled buttons while pressed; removed under reduced motion."
+      },
+      {
+        "name": "website-connection-trace",
+        "value": "6s cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Visible project and delivery traces; outbound flow starts 3s later. Paused offscreen, in hidden documents, by the user, or under reduced motion."
       }
     ],
     "breakpoints": [
@@ -340,6 +463,18 @@
       {
         "name": "compact-max",
         "value": "600px"
+      },
+      {
+        "name": "website-intermediate-max",
+        "value": "1280px"
+      },
+      {
+        "name": "website-stacked-max",
+        "value": "800px"
+      },
+      {
+        "name": "website-compact-max",
+        "value": "500px"
       }
     ]
   },
@@ -415,17 +550,50 @@
       "description": "Icon, identifier, and host with a tonal selected state.",
       "html": "<button class=\"ds-record\" type=\"button\" aria-pressed=\"true\"><span class=\"ds-record-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.65\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/><circle cx=\"12\" cy=\"16\" r=\"1\"/></svg></span><span class=\"ds-record-label\"><strong>Service credential</strong><span>api.example.com</span></span><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.65\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></button>",
       "css": ".ds-record{font-family:var(--font-sans,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif);display:flex;align-items:center;gap:11px;width:100%;background:transparent;color:var(--text,#ececec);border:0;border-radius:14px;padding:12px 9px;text-align:left;cursor:pointer}.ds-record[aria-pressed=\"true\"]{background:var(--hover,#2f2f2f)}.ds-record-icon{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:12px;background:var(--subtle,#2f2f2f);color:var(--muted,#b5b5b5)}.ds-record-label{display:grid;flex:1;min-width:0;gap:3px;line-height:1.5}.ds-record-label strong{font-size:13px;font-weight:550;overflow-wrap:anywhere}.ds-record-label>span{font-size:11px;color:var(--muted,#b5b5b5);overflow-wrap:anywhere}.ds-record>svg{color:var(--muted,#b5b5b5)}.ds-record:hover:not(:disabled){background:var(--hover,#2f2f2f)}.ds-record:focus-visible{outline:2px solid var(--text,#ececec);outline-offset:4px;}.ds-record:active:not(:disabled){transform:scale(.98)}.ds-record:disabled{cursor:not-allowed;opacity:.45}@media(prefers-reduced-motion:reduce){.ds-record{transition:none}.ds-record:active:not(:disabled){transform:none}}:host-context([data-theme=\"light\"]) .ds-record-icon{background:var(--panel,#fafafa)}"
+    },
+    {
+      "name": "Public Primary Action",
+      "kind": "button",
+      "refersTo": "website-button-primary",
+      "description": "Ice-blue pill action for the public CLI quickstart.",
+      "html": "<a class=\"ds-website-primary\" href=\"/docs/quickstart/\">Start with the CLI <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14m-6-6 6 6-6 6\"/></svg></a>",
+      "css": ".ds-website-primary{display:inline-flex;align-items:center;justify-content:center;gap:18px;min-height:50px;padding:13px 26px;border:1px solid var(--accent,#9bccff);border-radius:999px;background:var(--accent,#9bccff);color:var(--accent-ink,#142131);font:600 18px -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;text-decoration:none}.ds-website-primary:hover{background:var(--accent-hover,#b6dbff);border-color:var(--accent-hover,#b6dbff)}.ds-website-primary:focus-visible{outline:2px solid var(--accent,#9bccff);outline-offset:5px}@media(prefers-reduced-motion:no-preference){.ds-website-primary{transition:background-color 160ms ease-out,border-color 160ms ease-out}}@media(max-width:500px){.ds-website-primary{min-height:44px;padding:10px 16px;font-size:13px;gap:12px}}"
+    },
+    {
+      "name": "Public Secondary Action",
+      "kind": "button",
+      "refersTo": "website-button-secondary",
+      "description": "Bordered public reading action with neutral hover feedback.",
+      "html": "<a class=\"ds-website-secondary\" href=\"/docs/\">Read the docs</a>",
+      "css": ".ds-website-secondary{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:13px 26px;border:1px solid var(--border,#404040);border-radius:999px;background:transparent;color:var(--text,#ececec);font:400 18px -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;text-decoration:none}.ds-website-secondary:hover{background:var(--subtle,#2f2f2f)}.ds-website-secondary:focus-visible{outline:2px solid var(--accent,#9bccff);outline-offset:5px}@media(prefers-reduced-motion:no-preference){.ds-website-secondary{transition:background-color 160ms ease-out}}@media(max-width:500px){.ds-website-secondary{min-height:44px;padding:10px 16px;font-size:13px}}"
+    },
+    {
+      "name": "Public Example Selector",
+      "kind": "custom",
+      "refersTo": "website-environment-picker",
+      "description": "Illustrative environment selection; shipping behavior updates the public value and status without resolving credentials.",
+      "html": "<fieldset class=\"ds-website-picker\"><legend>Example environment</legend><button type=\"button\" aria-pressed=\"true\">Development</button><button type=\"button\" aria-pressed=\"false\">Production</button></fieldset>",
+      "css": ".ds-website-picker{display:flex;gap:3px;border:0;padding:3px;border-radius:999px;background:var(--subtle,#2f2f2f);margin:0;width:fit-content}.ds-website-picker legend{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.ds-website-picker button{border:0;background:transparent;padding:8px 11px;border-radius:999px;color:var(--muted,#b5b5b5);font:400 11px -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;cursor:pointer}.ds-website-picker button[aria-pressed=\"true\"]{background:var(--bg,#171717);color:var(--accent,#9bccff)}.ds-website-picker button:hover{color:var(--text,#ececec)}.ds-website-picker button:focus-visible{outline:2px solid var(--accent,#9bccff);outline-offset:-2px}@media(prefers-reduced-motion:no-preference){.ds-website-picker button{transition:background-color 160ms ease-out,color 160ms ease-out}}"
+    },
+    {
+      "name": "Public Configuration Window",
+      "kind": "card",
+      "refersTo": "website-window",
+      "description": "Flat rounded configuration material used by the public project scene and placeholder output.",
+      "html": "<section class=\"ds-website-window\" aria-label=\"Illustrative project configuration\"><header>av.toml <span>Project configuration</span></header><pre><code>schema = 2\n\n[values.SERVICE_TOKEN]\ntype = \"string\"\nsecret = \"secret://example/token\"</code></pre><p>Illustrative project configuration</p></section>",
+      "css": ".ds-website-window{border:1px solid var(--border,#404040);border-radius:16px;overflow:hidden;background:var(--surface,#212121);color:var(--text,#ececec);font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif}.ds-website-window header{display:flex;justify-content:space-between;gap:16px;padding:16px 18px;border-bottom:1px solid var(--border,#404040);font-size:13px;font-weight:550}.ds-website-window header span{color:var(--muted,#b5b5b5);font-size:12px;font-weight:400}.ds-website-window pre{padding:20px 22px;margin:0;overflow:auto;line-height:25px;font-size:14px}.ds-website-window code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.ds-website-window p{padding:16px 24px;margin:0;border-top:1px solid var(--border,#404040);color:var(--muted,#b5b5b5);font-size:12px}"
     }
   ],
   "narrative": {
     "northStar": "Focused settings",
-    "overview": "Agents Vault uses a quiet, compact settings language for local credential administration. Neutral surfaces and clear label/value relationships carry the interface. Rounded controls, restrained system typography, and immediate state feedback express the user-approved Apple and shadcn/HeroUI direction.\n\nDark is the initial appearance, using three principal near-black surface tones. The main canvas uses the darkest tone, grouped panels use the middle tone, and compact details and selection states use the lightest tone. Pure black is excluded from these surfaces by the user-approved palette refinement. An optional light palette uses the same semantic roles. The interface is semantic UI with vector icons; it does not depend on photography or shipping raster artwork. The system below is extracted from `web/src/styles.css` and the components in `web/src/App.tsx`.",
+    "overview": "Agents Vault uses a quiet, compact settings language for local credential administration. Neutral surfaces and clear label/value relationships carry the interface. Rounded controls, restrained system typography, and immediate state feedback express the user-approved Apple and shadcn/HeroUI direction.\n\nDark is the initial appearance, using three principal near-black surface tones. The main canvas uses the darkest tone, grouped panels use the middle tone, and compact details and selection states use the lightest tone. Pure black is excluded from these surfaces by the user-approved palette refinement. An optional light palette uses the same semantic roles. The operator interface is semantic UI with vector icons; it does not depend on photography or shipping raster artwork. The operator guidance is extracted from `web/src/styles.css` and the components in `web/src/App.tsx`.\n\nThe public website applies the same rounded Apple and shadcn direction at a more spacious reading scale. Its named direction is **Readable projects with deliberate access**: neutral windows, readable configuration, and a restrained ice-blue accent for actions and connection feedback. Website tokens are scoped with `website-`; the console retains its neutral primary actions. Public runtime sources are `website/src/styles/landing.css`, `website/src/styles/docs.css`, and the Astro scene components. The registered [public surface brief](.impeccable/surfaces/website-src-pages-index-astro.md) owns the landing composition and reading sequence.",
     "keyCharacteristics": [
       "Three near-black surface tones in dark mode, with neutral text and a separate light appearance.",
       "Compact pill actions and gently rounded grouped settings.",
       "Flat surfaces separated by tone and thin borders.",
       "Functional system type with explicit heading and control hierarchy.",
-      "Brief state transitions with static feedback under reduced motion."
+      "Brief state transitions with static feedback under reduced motion.",
+      "Public pages use larger system headings, flat rounded configuration windows, and ice-blue action and trace feedback."
     ],
     "rules": [
       {
@@ -436,6 +604,11 @@
       {
         "name": "The Darkest Canvas Rule",
         "body": "Keep the dark main canvas at the background tone; panels and compact details step lighter above it.",
+        "section": "colors"
+      },
+      {
+        "name": "The Public Accent Rule",
+        "body": "Use the website accent for actions, focus, selection, and delivery feedback; retain neutral surfaces and the operator console's existing primary roles.",
         "section": "colors"
       },
       {
@@ -450,14 +623,19 @@
       "Do preserve compact pill actions, rounded fields, and flat bordered groups.",
       "Do keep supporting metadata muted while headings, values, and focus use the text role.",
       "Do provide visible keyboard focus and retain static state feedback under reduced motion.",
-      "Do allow long identifiers, hosts, and command previews to wrap."
+      "Do allow long identifiers, hosts, and command previews to wrap.",
+      "Do scope the ice-blue accent to the public website and preserve its flat neutral window materials.",
+      "Do retain readable static scenes, visible keyboard focus, and the local-only placeholder behavior.",
+      "Do keep media captions and transcript synchronized with the illustrative synthetic story and factual limits."
     ],
     "donts": [
-      "Don't introduce teal or blue accent styling into this approved neutral world.",
+      "Don't introduce teal or blue accent styling into the operator console's approved neutral world.",
       "Don't use pure black for dark surfaces; preserve the three near-black surface tones.",
       "Don't replace the user-selected system typography with a decorative display face.",
       "Don't rely on shadows or raster artwork to explain the existing settings hierarchy.",
-      "Don't turn passive badges into controls without explicit interactive semantics."
+      "Don't turn passive badges into controls without explicit interactive semantics.",
+      "Don't use maturity labels in public copy; state the actual delivery, custody, and platform limits.",
+      "Don't treat illustrative configuration, diagrams, or media as live vault access or evidence of production custody."
     ]
   }
 }

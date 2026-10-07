@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "assetType": "rendered_video_frame",
+  "creationMethod": "The poster is decoded from a Forma-rendered video frame, then encoded as PNG and WebP.",
+  "generativeImageModel": null,
+  "generatedRaster": false,
+  "sourceArtwork": "source/main.jsx",
+  "sourceArtworkSha256": "fa46cf2dcc5d63ebf3cf5fd8d0de8b56e2ec16c8175f9b8c0b9f1ce0ed7004da",
+  "timelineSource": "source/index.html",
+  "timelineSourceSha256": "b597ad4427b69e4b12a9e5824bd0062875dadaf5c04787508450a269f20a9605",
+  "renderer": "Forma native CompositionStage with local Chromium and FFmpeg export",
+  "renderedVideo": "agents-vault-explainer.mp4",
+  "renderedVideoSha256": "d51759c235d6deefdac3bd86429743ee80e1d14ade8e7b6a4921baac2e1a8f68",
+  "frameTimestampSeconds": 2.5,
+  "frameIndexAt30Fps": 75,
+  "dimensions": {
+    "width": 1280,
+    "height": 720
+  },
+  "processing": [
+    "Decode the rendered H.264 MP4 at 2.5 seconds using FFmpeg.",
+    "Export one PNG frame.",
+    "Encode that PNG as WebP at quality 88."
+  ],
+  "outputs": [
+    {
+      "path": "agents-vault-poster.png",
+      "sha256": "032dec3db0720211386060dff34ba30b12fb74c906966e3d360c504b5f3e67f2"
+    },
+    {
+      "path": "agents-vault-poster.webp",
+      "sha256": "cbb5db8c92648deb9699032351400b5fe92276a275946199243158587e1bc4e9"
+    }
+  ],
+  "contentProvenance": "Original English motion graphic grounded in the supplied Agents Vault product and public documentation. All shown values and recipes are illustrative synthetic data. The neutral artwork states concrete credential and host boundaries.",
+  "font": "Packaged Inter; font license is included in the reusable source."
+}

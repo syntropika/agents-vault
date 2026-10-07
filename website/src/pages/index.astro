@@ -1,70 +1,64 @@
 ---
 import { createMarkdownProcessor } from '@astrojs/markdown-remark';
+import FlowScene from '../components/FlowScene.astro';
 import pages from '../../.generated/pages.json';
+import ProjectScene from '../components/ProjectScene.astro';
+import Mark from '../components/Mark.astro';
 import '../styles/landing.css';
-
 const repository = 'https://github.com/syntropika/agents-vault';
 const landing = pages.find((page) => page.slug === 'landing')!;
 const processor = await createMarkdownProcessor();
-const sections = landing.humanBody.split(/\n## /);
-const intro = sections.shift()!.split(/\n\n/);
+const content = landing.humanBody.split(/\n## /);
+const intro = content.shift()!.split(/\n\n/);
 const headline = intro[0].split('. ').map((line) => line.endsWith('.') ? line : line + '.');
-const description = intro[1];
 const notice = (await processor.render(intro[2])).code;
-const links = (await processor.render(intro[3])).code;
-const body = await Promise.all(sections.map(async (section) => {
+const sections = await Promise.all(content.map(async (section) => {
   const separator = section.indexOf('\n');
   return { title: section.slice(0, separator), html: (await processor.render(section.slice(separator + 1))).code };
 }));
-const quickstart = pages.find((page) => page.slug === 'quickstart')!;
-const buildCommands = quickstart.source.match(/```sh\n(cargo build[^]*?)\n```/)![1];
+if (sections.length !== 7) throw new Error('Landing requires all seven authored sections.');
 const canonical = Astro.site ? new URL('/', Astro.site).href : undefined;
 ---
 <!doctype html>
 <html lang="en" data-theme="dark">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Agents Vault — local configuration and credential access</title>
-    <meta name="description" content={landing.description} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="canonical" href={canonical} />
-    <link rel="alternate" type="text/markdown" href="/index.md" title="This page as Markdown" />
-    <link rel="alternate" type="text/plain" href="/llms.txt" title="Agent documentation index" />
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="color-scheme" content="dark" />
+    <title>Agents Vault — local configuration and credential access</title><meta name="description" content={landing.description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" /><link rel="canonical" href={canonical} />
+    <link rel="alternate" type="text/markdown" href="/index.md" title="This page as Markdown" /><link rel="alternate" type="text/plain" href="/llms.txt" title="Agent documentation index" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <div class="site-shell">
-      <header class="site-header">
-        <a class="brand" href="/" aria-label="Agents Vault home"><span class="brand-mark" aria-hidden="true">av</span>Agents Vault</a>
-        <nav aria-label="Main navigation"><a href="/docs/">Documentation</a><a href={repository}>GitHub</a></nav>
-      </header>
+      <header class="site-header"><a class="brand" href="/" aria-label="Agents Vault home"><span class="brand-mark" aria-hidden="true">av</span>Agents Vault</a><nav aria-label="Main navigation"><a href="/docs/">Documentation</a><a href={repository}>GitHub</a></nav></header>
       <main id="main">
         <section class="intro" aria-labelledby="headline">
-          <div class="intro-copy">
-            <h1 id="headline">{headline.map((line) => <span>{line}</span>)}</h1>
-            <p class="description">{description}</p>
-            <div class="intro-links" set:html={links} />
-            <div class="alpha-note" set:html={notice} />
+          <div class="intro-copy"><h1 id="headline">{headline.map((line) => <span>{line}</span>)}</h1><p class="description">{intro[1]}</p><div class="intro-links"><a class="button primary" href="/docs/quickstart/">Start with the CLI <Mark name="arrow" /></a><a class="button secondary" href="/docs/">Read the docs</a></div></div>
+          <ProjectScene />
+        </section>
+        <section class="boundary" aria-label="Credential delivery boundary"><h2><span>Configuration stays readable.</span><span>Release stays explicit.</span></h2><p>Direct delivery exposes real values.<br />Protected proxy custody remains under development.</p></section>
+        <a class="how-link" href="#delivery">How it works <Mark name="down" /></a>
+        <section id="delivery" class="delivery" aria-labelledby="delivery-heading">
+          <div class="section-heading"><h2 id="delivery-heading">{sections[1].title}</h2><button id="motion-toggle" class="motion-toggle" type="button" aria-pressed="false" hidden><span class="motion-pause"><Mark name="pause" /></span><span class="motion-play"><Mark name="play" /></span><span>Pause animations</span></button></div>
+          <div class="flow-intro" set:html={sections[1].html} />
+          <FlowScene />
+        </section>
+        <section class="configuration" aria-labelledby="configuration-heading">
+          <div><h2 id="configuration-heading">{sections[2].title}</h2><div class="section-copy" set:html={sections[2].html} /></div>
+          <div class="output-window">
+            <div class="output-heading"><strong>.env.example</strong><fieldset class="environment-picker"><legend class="sr-only">Example environment</legend><button type="button" data-environment="development" aria-pressed="true">Development</button><button type="button" data-environment="production" aria-pressed="false">Production</button></fieldset></div>
+            <pre><code><span>APP_ENV="<span id="example-environment">development</span>"</span>
+<span>SERVICE_TOKEN="&lt;AV_SECRET:example/token&gt;"</span></code></pre>
+            <p id="example-status" role="status">Illustrative development output. No credential is resolved.</p>
           </div>
-          <aside class="source-preview" aria-label="Build the CLI from a checkout">
-            <div class="preview-heading"><span>Start from a checkout</span><span class="preview-label">Rust CLI</span></div>
-            <pre><code>{buildCommands}</code></pre>
-            <div class="preview-divider"></div>
-            <div class="preview-caption"><span>av.toml</span><span>Public configuration</span></div>
-            <pre class="config"><code><span class="code-muted">schema</span> = 2<br /><br /><span class="code-muted">[project]</span><br />id = "example"<br /><br /><span class="code-muted">[values.APP_ENV]</span><br />type = "string"<br />value = "development"</code></pre>
-            <a class="preview-next" href="/docs/quickstart/">Run your first project <svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M4 10h12m-5-5 5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg></a>
-          </aside>
         </section>
-        <section class="details" aria-label="How Agents Vault works">
-          {body.map((section) => <article><h2>{section.title}</h2><div set:html={section.html} /></article>)}
-        </section>
-        <section class="reading" aria-labelledby="reading-heading">
-          <div><h2 id="reading-heading">Read it your way.</h2><p>Browse the guides, copy a page, or use the same documentation as plain text.</p></div>
-          <nav aria-label="Documentation formats"><a href="/docs/">Human guides</a><a href="/llms.txt">Agent index</a><a href="/llms-full.txt">Complete Markdown</a></nav>
-        </section>
+        <section class="actions-story" aria-labelledby="action-heading"><div><h2 id="action-heading">{sections[3].title}</h2><div class="section-copy" set:html={sections[3].html} /></div><ul class="review-fields" aria-label="Fields shown for a frozen action"><li><span>Command</span><strong>Executable and arguments</strong></li><li><span>Destination</span><strong>Exact host</strong></li><li><span>Credential</span><strong>Selected version</strong></li><li><span>Limits</span><strong>Runtime and request quotas</strong></li></ul></section>
+        <section class="explainer" aria-labelledby="video-heading"><div class="section-heading"><h2 id="video-heading">{sections[4].title}</h2><span>37 seconds · Silent · English captions</span></div><div class="video-intro" set:html={sections[4].html} /><video controls preload="none" playsinline width="1280" height="720" poster="/media/agents-vault-poster.webp" aria-label="Agents Vault configuration and credential delivery explainer"><source src="/media/agents-vault-explainer.webm" type="video/webm" /><source src="/media/agents-vault-explainer.mp4" type="video/mp4" /><track kind="captions" src="/media/agents-vault-en.vtt" srclang="en" label="English" /><p>Your browser cannot play this video. <a href="/media/agents-vault-explainer.mp4">Download the MP4</a> or <a href="/media/agents-vault-transcript.md">read the transcript</a>.</p></video></section>
+        <section class="limits-story" aria-labelledby="limits-heading"><h2 id="limits-heading">{sections[5].title}</h2><div class="section-copy" set:html={sections[5].html} /><div class="boundary-note" set:html={notice} /></section>
+        <section class="reading" aria-labelledby="reading-heading"><h2 id="reading-heading">{sections[6].title}</h2><div class="section-copy" set:html={sections[6].html} /></section>
       </main>
-      <footer><span>Agents Vault · alpha prototype</span><a href="/docs/limits-and-trust/">Limits and trust</a><a href={repository}>Source code</a></footer>
+      <footer><span>Agents Vault</span><a href="/docs/limits-and-trust/">Limits and trust</a><a href={repository}>Source code</a><a href="/index.md">Read Markdown</a></footer>
     </div>
+    <script>import '../scripts/landing';</script>
   </body>
 </html>

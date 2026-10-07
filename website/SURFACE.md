@@ -1,25 +1,23 @@
 # Public website surface
 
-## Scope and mode
+## Scope and authority
 
-`website/src/pages/index.astro` presents the product and the first useful step. The documentation routes serve reading and task completion. The public site is separate from the operator console.
+The public landing page explains readable project configuration and explicit credential delivery. Documentation supports reading, configuration, and task completion. The site is independent of the operator console and has no broker API connection.
 
-## Audience and outcome
+The complete direction contract is the registered [public surface brief](../.impeccable/surfaces/website-src-pages-index-astro.md). Shared visual guidance and website-scoped tokens live in [DESIGN.md](../DESIGN.md); the operator console retains its neutral design roles.
 
-Developers and agents need to understand the alpha, choose direct or proxy delivery, and find accurate commands and limits. The primary landing action opens the CLI quickstart. The documentation provides navigation, local search, and a direct Markdown copy.
+## Composition and material
 
-## Authority and constraints
+A large two-line introduction and CLI/documentation actions sit beside overlapping project and credential-reference windows. A separate command → broker → HTTPS provider scene explains reviewed proxy delivery below the first viewport. The page continues through placeholder output, action review, a silent explainer, current limits, and documentation exports.
 
-Inherit the established product world: #171717, #212121, #2f2f2f, neutral borders, rounded compact controls, system typography, and flat surfaces. The explicit implementation brief fixes the framework and compact neutral direction. No new brand or component-system identity is introduced.
-
-## First viewport
-
-A compact brand/navigation bar leads into the actual product purpose and alpha notice. Beside it, a readable command and public configuration sample show the CLI mechanism. The page remains useful without animation, imagery, or invented commercial proof. The build uses code and authored Markdown rather than a generated visual comp.
+Flat near-black surfaces, rounded windows and pills, restrained system type, and ice-blue actions, focus, selected labels, and connection traces define the public world. CSS geometry and inline SVG construct the scenes. Compact screens stack windows and the flow so their content remains readable.
 
 ## Interaction and motion
 
-Plain links lead to real guides and formats. Copy page fetches the matching generated Markdown, reports success, and offers a direct-link recovery if copying fails. Documentation theme controls and Pagefind search preserve Starlight's behavior. Hover feedback is brief; reduced motion removes transitions.
+The local Development/Production selector updates only the public `APP_ENV` example and announces its illustrative state; credentials remain placeholders. No example resolves a credential. Connection traces run while visible, pause when the document is hidden, and have a Pause/Resume animations control. Reduced motion preserves static scenes and removes transitions and smooth scrolling.
 
-## Open decisions
+The locally served 37-second Forma explainer has native playback controls, English captions, a selectable WebVTT track, and a Markdown transcript. Its editable source archive and provenance live in `media-source/`. Documentation preserves local Pagefind search, theme selection, generated Markdown links, and copy feedback with direct-link recovery.
 
-The public origin and deployment target remain operator choices. Publication and root repository wiring are outside this implementation. Full documentation version snapshots can follow incompatible public releases. The confirmed execution boundary binds a request to its original live IPC connection; public copy must retain the limits of shared sockets, copied capabilities, and unverified production custody.
+## Product constraints
+
+Public copy and illustrations retain explicit delivery limits: direct delivery exposes values; proxy credentials are synthetic; host commands are not confined; protected custody and installed-platform acceptance remain under development. The original live IPC connection owns execution authority; shared sockets and copied proxy capabilities remain limits. Illustrative scenes and media never imply live approval or production custody.

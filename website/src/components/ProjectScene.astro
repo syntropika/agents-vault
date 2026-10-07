@@ -1,0 +1,20 @@
+---
+import Mark from './Mark.astro';
+const lines = ['schema = 2', '', '[project]', 'id = "example"', '', '[values.SERVICE_TOKEN]', 'type = "string"', 'secret = "secret://example/token"', '', '[values.APP_ENV]', 'type = "string"', 'value = "development"'];
+---
+<figure class="project-scene motion-scene" aria-label="Illustrative project configuration and credential reference">
+  <div class="vault-window">
+    <div class="window-heading"><span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span><strong>Agents Vault</strong><span>Credential reference</span></div>
+    <dl class="vault-reference">
+      <div><span class="reference-icon"><Mark name="database" /></span><dt>Reference</dt><dd><code>secret://example/token</code><small>Refers to an encrypted credential</small></dd></div>
+      <div><span class="reference-icon"><Mark name="shield" /></span><dt>Access policy</dt><dd>Allowed: project (example)<small>Use: approved commands only</small></dd></div>
+      <div><span class="reference-icon"><Mark name="lock" /></span><dt>No grants by default</dt><dd>New credentials have no release grants. Approve matching runs from an operator terminal.</dd></div>
+    </dl>
+  </div>
+  <div class="reference-connection" aria-hidden="true"><i></i><i></i></div>
+  <div class="project-window">
+    <div class="window-heading"><span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span><strong>av.toml</strong><span>Project configuration</span></div>
+    <pre class="project-code"><code>{lines.map((line, index) => <span class:list={['code-line', { 'secret-line': index === 7 }]}><span class="line-number" aria-hidden="true">{index + 1}</span><span>{line || ' '}</span></span>)}</code></pre>
+  </div>
+  <figcaption>Illustrative project configuration</figcaption>
+</figure>

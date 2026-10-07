@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,13 +9,13 @@ export const repository = 'https://github.com/syntropika/agents-vault';
 
 const descriptions = {
   index: 'Find the right workflow for configuration, credentials, actions, and trust.',
-  quickstart: 'Build the alpha CLI, run public configuration, and authorize direct secret delivery.',
+  quickstart: 'Build the CLI, run public configuration, and authorize direct secret delivery.',
   'configuration-and-delivery': 'Choose between environment values and the synthetic broker proxy.',
   'credential-lifecycle': 'Manage credentials, versions, grants, storage, and recovery.',
   'actions-and-approvals': 'Configure one active recipe and review requests through the console or MCP Apps.',
   'limits-and-trust': 'Understand direct delivery, capabilities, harness authority, and platform limits.',
   troubleshooting: 'Resolve configuration, connection, approval, and client errors.',
-  landing: 'Local configuration and explicit credential access with the Agents Vault alpha.',
+  landing: 'Local configuration and explicit credential access with Agents Vault.',
 };
 
 export function humanRoute(slug) {
@@ -28,7 +28,8 @@ export function markdownRoute(slug) {
 
 export function mapLinks(markdown, slug, machine = false) {
   return markdown.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (full, label, destination) => {
-    if (/^(?:[a-z]+:|#|\/)/i.test(destination)) return full;
+    if (destination.startsWith('/')) return machine ? `[${label}](${origin}${destination})` : full;
+    if (/^(?:[a-z]+:|#)/i.test(destination)) return full;
     const [file, fragment] = destination.split('#');
     const resolved = path.resolve(sourceRoot, file);
     let target;
@@ -65,7 +66,7 @@ export async function prepareContent() {
   await rm(generated, { force: true, recursive: true });
   await mkdir(path.join(generated, 'content/docs'), { recursive: true });
   await mkdir(path.join(generated, 'public/docs'), { recursive: true });
-  await copyFile(path.join(websiteRoot, 'public/favicon.svg'), path.join(generated, 'public/favicon.svg'));
+  await cp(path.join(websiteRoot, 'public'), path.join(generated, 'public'), { recursive: true });
   await writeFile(path.join(generated, 'pages.json'), JSON.stringify(pages.map((page) => ({ ...page, humanBody: mapLinks(page.body, page.slug) }))));
   for (const page of pages) {
     if (page.slug !== 'landing') {
@@ -75,7 +76,7 @@ export async function prepareContent() {
     }
     await writeFile(path.join(generated, 'public', markdownRoute(page.slug)), mapLinks(page.source, page.slug, true));
   }
-  const status = '> Agents Vault is a local-first alpha. Direct delivery gives trusted code real values. Broker proxy actions use synthetic credentials; protected production custody and installed macOS acceptance remain open.\n';
+  const status = '> Agents Vault runs locally. Direct delivery gives trusted code real values. Broker proxy actions use synthetic credentials; protected production custody and installed macOS acceptance remain open.\n';
   const links = pages.map((page) => `- [${page.title}](${origin}${markdownRoute(page.slug)}): ${page.description}`).join('\n');
   await writeFile(path.join(generated, 'public/llms.txt'), `# Agents Vault\n\n${status}\n## Documentation\n\n${links}\n\n## Complete text\n\n- [All documentation](${origin}/llms-full.txt): The same published pages as a single Markdown bundle.\n`);
   await writeFile(path.join(generated, 'public/llms-full.txt'), `# Agents Vault — complete documentation\n\n${status}\n` + pages.map((page) => `${mapLinks(page.source, page.slug, true)}\n\n---\n\n`).join(''));

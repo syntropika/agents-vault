@@ -8,7 +8,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Agents Vault',
-      description: 'Local project configuration, encrypted credentials, and reviewed CLI actions. An alpha prototype.',
+      description: 'Local project configuration, encrypted credentials, and reviewed CLI actions.',
       favicon: '/favicon.svg',
       social: [{ icon: 'github', label: 'Source on GitHub', href: 'https://github.com/syntropika/agents-vault' }],
       customCss: ['./src/styles/docs.css'],

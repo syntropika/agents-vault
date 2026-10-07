@@ -32,5 +32,5 @@ const searchFiles = await readdir(path.join(output, 'pagefind'));
 assert(searchFiles.includes('pagefind.js'), 'Missing local search bundle');
 const quickstart = await readFile(path.join(output, 'docs/quickstart.md'), 'utf8');
 assert(quickstart.includes('cargo build --locked -p av --bin av'), 'Missing source-build command');
-assert(quickstart.includes('https://github.com/syntropika/agents-vault/blob/main/docs/prototype-status.md'), 'Missing mapped evidence link');
+assert(quickstart.includes('https://github.com/syntropika/agents-vault/blob/main/docs/implementation-status.md'), 'Missing mapped evidence link');
 console.log(`Verified ${pages.length} human pages, ${pages.length} Markdown routes, two agent indexes, local links, and Pagefind output.`);

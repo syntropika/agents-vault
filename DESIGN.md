@@ -1,6 +1,6 @@
 ---
 name: Agents Vault
-description: A restrained local operator console for credentials and permitted use.
+description: Restrained credential administration and a public guide to readable configuration and explicit access.
 colors:
   bg: "#171717"
   surface: "#212121"
@@ -22,6 +22,13 @@ colors:
   light-muted: "#62626d"
   light-primary: "#18181b"
   light-primary-ink: "#fff"
+  website-accent: "#9bccff"
+  website-accent-hover: "#b6dbff"
+  website-accent-surface: "#22303e"
+  website-accent-ink: "#142131"
+  website-light-accent: "#245b91"
+  website-light-accent-low: "#e5f0ff"
+  website-light-accent-high: "#183d62"
 typography:
   headline:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -60,6 +67,32 @@ typography:
     fontSize: "11px"
     fontWeight: 400
     lineHeight: 1.5
+  website-display:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontSize: "clamp(42px, 5vw, 76px)"
+    fontWeight: 700
+    lineHeight: 1.07
+    letterSpacing: "-0.04em"
+  website-headline:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontSize: "42px"
+    fontWeight: 650
+    lineHeight: 1.15
+    letterSpacing: "-0.035em"
+  website-body:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontSize: "16px"
+    fontWeight: 400
+    lineHeight: 1.8
+  website-action:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontSize: "18px"
+    fontWeight: 600
+  website-code:
+    fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace"
+    fontSize: "14px"
+    fontWeight: 400
+    lineHeight: "25px"
 rounded:
   badge: "8px"
   field: "12px"
@@ -68,6 +101,8 @@ rounded:
   panel: "20px"
   shell: "24px"
   pill: "999px"
+  website-window: "16px"
+  website-reference: "10px"
 spacing:
   tight: "4px"
   icon: "8px"
@@ -78,6 +113,8 @@ spacing:
   action: "22px"
   panel: "24px"
   stage: "32px"
+  website-section: "100px"
+  website-section-compact: "60px"
 components:
   button-primary:
     backgroundColor: "{colors.primary}"
@@ -127,6 +164,37 @@ components:
     textColor: "{colors.text}"
     rounded: "{rounded.row}"
     padding: "12px 9px"
+  website-button-primary:
+    backgroundColor: "{colors.website-accent}"
+    textColor: "{colors.website-accent-ink}"
+    typography: "{typography.website-action}"
+    rounded: "{rounded.pill}"
+    padding: "13px 26px"
+  website-button-primary-hover:
+    backgroundColor: "{colors.website-accent-hover}"
+  website-button-secondary:
+    backgroundColor: "transparent"
+    textColor: "{colors.text}"
+    rounded: "{rounded.pill}"
+    padding: "13px 26px"
+  website-window:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.website-window}"
+  website-environment-picker:
+    backgroundColor: "{colors.subtle}"
+    rounded: "{rounded.pill}"
+    padding: "3px"
+  website-environment-selected:
+    backgroundColor: "{colors.bg}"
+    textColor: "{colors.website-accent}"
+    rounded: "{rounded.pill}"
+    padding: "8px 11px"
+  website-motion-toggle:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.pill}"
+    padding: "8px 12px"
 ---
 
 # Design System: Agents Vault
@@ -137,7 +205,9 @@ components:
 
 Agents Vault uses a quiet, compact settings language for local credential administration. Neutral surfaces and clear label/value relationships carry the interface. Rounded controls, restrained system typography, and immediate state feedback express the user-approved Apple and shadcn/HeroUI direction.
 
-Dark is the initial appearance, using three principal near-black surface tones. The main canvas uses the darkest tone, grouped panels use the middle tone, and compact details and selection states use the lightest tone. Pure black is excluded from these surfaces by the user-approved palette refinement. An optional light palette uses the same semantic roles. The interface is semantic UI with vector icons; it does not depend on photography or shipping raster artwork. The system below is extracted from `web/src/styles.css` and the components in `web/src/App.tsx`.
+Dark is the initial appearance, using three principal near-black surface tones. The main canvas uses the darkest tone, grouped panels use the middle tone, and compact details and selection states use the lightest tone. Pure black is excluded from these surfaces by the user-approved palette refinement. An optional light palette uses the same semantic roles. The operator interface is semantic UI with vector icons; it does not depend on photography or shipping raster artwork. The operator guidance is extracted from `web/src/styles.css` and the components in `web/src/App.tsx`.
+
+The public website applies the same rounded Apple and shadcn direction at a more spacious reading scale. Its named direction is **Readable projects with deliberate access**: neutral windows, readable configuration, and a restrained ice-blue accent for actions and connection feedback. Website tokens are scoped with `website-`; the console retains its neutral primary actions. Public runtime sources are `website/src/styles/landing.css`, `website/src/styles/docs.css`, and the Astro scene components. The registered [public surface brief](.impeccable/surfaces/website-src-pages-index-astro.md) owns the landing composition and reading sequence.
 
 **Key Characteristics:**
 
@@ -146,15 +216,21 @@ Dark is the initial appearance, using three principal near-black surface tones. 
 - Flat surfaces separated by tone and thin borders.
 - Functional system type with explicit heading and control hierarchy.
 - Brief state transitions with static feedback under reduced motion.
+- Public pages use larger system headings, flat rounded configuration windows, and ice-blue action and trace feedback.
 
 ## Colors
 
-The palette distinguishes surfaces through neutral tone rather than a chromatic accent. Frontmatter values record the default dark palette and the implemented light replacements; CSS custom properties remain the runtime source.
+The operator palette distinguishes surfaces through neutral tone. The public website adds an ice-blue accent within that neutral field. Frontmatter values record the default dark palette and the implemented light replacements; CSS custom properties remain the runtime source.
 
 ### Primary
 
 - **Primary:** high-contrast action fill, paired with primary ink for readable action text. The fill is pale in dark mode and dark in light mode.
 - **Primary Ink:** text inside the filled primary action.
+
+### Public Website Accent
+
+- **Ice Blue:** public primary actions, keyboard focus, selected environment labels, connector endpoints, delivery traces, and the broker mark. The hover tone lightens filled actions; the deep ink role keeps their text readable. The accent surface is a restrained background for the broker mark.
+- **Reading Accent:** documentation uses the public accent in dark appearance and a deeper blue with pale supporting fill in light appearance. These replacements are scoped to Starlight's documentation theme.
 
 ### Neutral
 
@@ -172,6 +248,8 @@ The palette distinguishes surfaces through neutral tone rather than a chromatic 
 **The Neutral Roles Rule.** Apply the same semantic color roles in both themes; appearance changes their values, not the information hierarchy.
 
 **The Darkest Canvas Rule.** Keep the dark main canvas at the background tone; panels and compact details step lighter above it.
+
+**The Public Accent Rule.** Use the website accent for actions, focus, selection, and delivery feedback; retain neutral surfaces and the operator console's existing primary roles.
 
 ## Typography
 
@@ -191,6 +269,10 @@ The palette distinguishes surfaces through neutral tone rather than a chromatic 
 
 The sign-in introduction has a contextual heading at (32px), weight (650), line height (1.15), and letter spacing (-0.025em), reduced to (27px) on narrow screens. Command text uses the browser's preformatted monospace face at (12px); no branded mono font is defined. Supporting prose is bounded where needed, including empty-state copy (40ch), introductory copy (42ch), and fine print (68ch).
 
+### Public Website Hierarchy
+
+The public display heading uses the website display token, with a larger, closely spaced two-line treatment. Introductory copy is (21px) with line height (1.5), reduced to (17px) on intermediate widths. Section headings use the website headline token and reduce to (32px), then (30px). Longer section copy uses the website body token and stays within (72ch); flow and video introductions use (75ch). Configuration uses the website code stack, with tabular line numbers and responsive sizes. Documentation prose uses (.96rem), line height (1.75), and a (72ch) measure. It shares the system stack and tightened heading spacing.
+
 ## Layout
 
 The outer stage uses the stage spacing step and centers a shell with maximum width (1380px). The desktop shell spans at least the viewport height minus the surrounding (64px). Its header uses three columns with centered segmented navigation, while the content area uses padding (38px 34px 40px).
@@ -203,9 +285,17 @@ The Actions editor uses the workspace settings width with three columns of limit
 
 Spacing is compact around individual controls and wider between sections. It is an observed collection of values rather than a strict mathematical grid. Reuse the recorded spacing steps where the same role recurs.
 
+### Public Website Layout
+
+The landing canvas centers a shell up to (1416px) wide with desktop side space (60px), intermediate side space (32px), and compact side space (18px). The hero pairs a large left-aligned introduction with offset project and reference windows. Intermediate desktop widths scale the composition proportionally. Below (800px), the hero and supporting two-column sections stack; below (500px), the windows become fully readable sequential blocks and the delivery flow becomes vertical. Preserve text and diagram legibility when adapting the registered surface.
+
+Lower sections have generous spacing using the website section steps. The local configuration output and action review list align with explanatory copy on wide screens. The explainer occupies the available width at its native (16:9) ratio. Documentation has a (48rem) content width and (17rem) sidebar; search, theme choice, and Markdown tools stay within its reading layout.
+
 ## Elevation & Depth
 
-The implementation uses no box shadows. Tone changes and single-pixel borders distinguish the outer shell, grouped settings, selected rows, and fields. The sign-in panel uses the panel tone to separate authentication from its surrounding surface.
+The operator implementation uses no box shadows. Tone changes and single-pixel borders distinguish the outer shell, grouped settings, selected rows, and fields. The sign-in panel uses the panel tone to separate authentication from its surrounding surface.
+
+The public website also uses no box shadows. Overlap, stacking order, tonal fills, and single-pixel outlines establish the relationship between the project and reference windows. Flow nodes, configuration output, video, and the limits panel retain this flat material character.
 
 ### Named Rules
 
@@ -216,6 +306,8 @@ The implementation uses no box shadows. Tone changes and single-pixel borders di
 Actions and segmented navigation use fully rounded pills. Fields and icon tiles use the field radius; badges are smaller rounded rectangles. Credential rows and feedback banners use the row radius, settings groups use the group radius, and the main shell uses the shell radius. The narrow shell uses the panel radius. Groups and the shell clip content at their corners.
 
 Vector icons are normally (18px) with stroke width (1.65). Icon-only controls use circular silhouettes. Selected and inactive status are expressed through tone, labels, and iconography rather than color-coded decoration.
+
+Public configuration windows, flow nodes, video, and the limits panel use the website window radius. Reference cards use the smaller website reference radius. Connection paths use a curved corner and round endpoints. Public marks and illustrations are CSS geometry with inline stroke SVG icons; the landing uses (22px) base icons at stroke width (1.5). Desktop overlap becomes stacked windows on compact screens.
 
 ## Components
 
@@ -256,6 +348,24 @@ Segmented navigation uses a subtle pill track with gaps (3px). Segments use comp
 
 Credential selection combines an icon tile, identifier, host, and trailing chevron. Selected rows use `aria-pressed="true"` and hover fill; pointer hover uses the same fill. Credential and setting icon tiles use subtle fill in dark mode; light mode uses panel and subtle fill respectively. Detail changes preserve the grouped icon/label/value vocabulary. Inline editors expand within the current content area and receive heading focus when opened. Empty states center an icon tile, title, and bounded explanatory copy.
 
+### Public Website Actions and Navigation
+
+Public calls to action use larger pill geometry and a minimum desktop height of (50px), reducing to (44px) on compact screens. Primary actions use website accent fill and ink; secondary actions use a border and neutral hover fill. Keyboard focus uses a (2px) accent outline with offset (5px). State changes use (160ms ease-out) when motion is allowed. The public header pairs the compact `av` mark with Documentation and GitHub links; compact layouts retain both destinations.
+
+### Public Configuration and Delivery Scenes
+
+The project scene uses overlapping flat windows, numbered schema-2 configuration, and a highlighted credential reference. A curved connector relates the readable project to its reference details. The lower flow presents the command, broker, and HTTPS provider with labeled rails and an explicit illustrative synthetic-action caption. Both diagrams remain understandable when static.
+
+The environment picker is a labeled group of buttons using `aria-pressed`. Selection changes only the public `APP_ENV` example and announces the illustrative output; the credential remains an unresolved placeholder. It performs no credential lookup. Its selected segment uses background fill and website accent text, with inset focus offset (-2px).
+
+Connection traces use a (6s) cycle with `cubic-bezier(.16, 1, .3, 1)` easing; the outbound flow starts (3s) later. Animation runs only while its scene is visible and the document is active. The pause control applies to these traces and changes to Resume animations when paused. Reduced motion keeps static paths and state feedback, removes transitions and smooth scrolling, and hides the unnecessary motion control. The video has independent native playback controls.
+
+### Public Explainer and Reading Tools
+
+The locally served (37-second), silent Forma explainer uses English captions, illustrative synthetic data, a poster, native controls, and MP4/WebM sources. A selectable WebVTT track and Markdown transcript accompany the video; editable source and provenance live in `website/media-source/`. Keep factual custody and platform limits visible in the media and surrounding copy. The video does not autoplay.
+
+Documentation preserves Starlight navigation, Pagefind search, and dark/light/system appearance. Read Markdown and Copy page use the generated direct Markdown files; copy feedback provides a direct-link recovery. Rounded search and reading controls follow the same compact geometry, with accent-colored keyboard focus.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -266,11 +376,16 @@ Credential selection combines an icon tile, identifier, host, and trailing chevr
 - **Do** keep supporting metadata muted while headings, values, and focus use the text role.
 - **Do** provide visible keyboard focus and retain static state feedback under reduced motion.
 - **Do** allow long identifiers, hosts, and command previews to wrap.
+- **Do** scope the ice-blue accent to the public website and preserve its flat neutral window materials.
+- **Do** retain readable static scenes, visible keyboard focus, and the local-only placeholder behavior.
+- **Do** keep media captions and transcript synchronized with the illustrative synthetic story and factual limits.
 
 ### Don't:
 
-- **Don't** introduce teal or blue accent styling into this approved neutral world.
+- **Don't** introduce teal or blue accent styling into the operator console's approved neutral world.
 - **Don't** use pure black for dark surfaces; preserve the three near-black surface tones.
 - **Don't** replace the user-selected system typography with a decorative display face.
 - **Don't** rely on shadows or raster artwork to explain the existing settings hierarchy.
 - **Don't** turn passive badges into controls without explicit interactive semantics.
+- **Don't** use maturity labels in public copy; state the actual delivery, custody, and platform limits.
+- **Don't** treat illustrative configuration, diagrams, or media as live vault access or evidence of production custody.
