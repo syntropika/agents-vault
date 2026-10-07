@@ -8,9 +8,9 @@ receives approved secret values and can read them. It does not provide protected
 broker custody.
 
 Native Windows tests and package installation must pass before release. The
-workflow is prepared, but has not run from this repository yet. Linux cross
-compilation and PowerShell syntax/package checks do not establish native Windows
-behavior. The initial CI target is Windows Server 2022 x64; desktop Windows and
+workflow runs direct-mode tests and package lifecycle checks on Windows Server
+2022 x64. Linux cross compilation and PowerShell syntax/package checks do not
+establish native Windows behavior. Desktop Windows and
 Authenticode signing remain release gates. This implementation is unsigned.
 
 ## Build the archive

@@ -1728,33 +1728,72 @@ mod tests {
         let (tls, ca_pem) = preview_certificate("api.example.test").unwrap();
         let ca_path = directory.path().join("ca.pem");
         fs::write(&ca_path, ca_pem).unwrap();
+        let mut unrelated_params = CertificateParams::new(Vec::<String>::new()).unwrap();
+        unrelated_params.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
+        unrelated_params
+            .distinguished_name
+            .push(DnType::CommonName, "Unrelated regression CA");
+        let unrelated_key = KeyPair::generate().unwrap();
+        let unrelated_ca = unrelated_params.self_signed(&unrelated_key).unwrap();
+        let unrelated_ca_path = directory.path().join("unrelated-ca.pem");
+        fs::write(&unrelated_ca_path, unrelated_ca.pem()).unwrap();
         let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
         let port = listener.local_addr().unwrap().port();
         let server = tokio::spawn(async move {
-            let (socket, _) = listener.accept().await.unwrap();
-            let Ok(mut stream) = TlsAcceptor::from(tls).accept(socket).await else {
-                return;
-            };
-            let mut request = Vec::new();
-            while !request.ends_with(b"\r\n\r\n") {
-                assert!(request.len() < 4096);
-                let mut byte = [0];
-                stream.read_exact(&mut byte).await.unwrap();
-                request.push(byte[0]);
+            for _ in 0..3 {
+                let (socket, _) = listener.accept().await.unwrap();
+                let Ok(mut stream) = TlsAcceptor::from(tls.clone()).accept(socket).await else {
+                    continue;
+                };
+                let mut request = Vec::new();
+                while !request.ends_with(b"\r\n\r\n") {
+                    assert!(request.len() < 4096);
+                    let mut byte = [0];
+                    if stream.read_exact(&mut byte).await.is_err() {
+                        break;
+                    }
+                    request.push(byte[0]);
+                }
+                if !request.ends_with(b"\r\n\r\n") {
+                    continue;
+                }
+                stream
+                    .write_all(
+                        b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok",
+                    )
+                    .await
+                    .unwrap();
+                stream.shutdown().await.unwrap();
             }
-            stream
-                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok")
-                .await
-                .unwrap();
-            stream.shutdown().await.unwrap();
         });
-        let output = AsyncCommand::new("curl")
-            .args(["--disable", "--silent", "--show-error", "--max-time", "5"])
-            .arg("--cacert")
-            .arg(ca_path)
-            .args(["--noproxy", "*", "--resolve"])
-            .arg(format!("api.example.test:{port}:127.0.0.1"))
-            .arg(format!("https://api.example.test:{port}/"))
+        let curl = |host: &str, ca: &Path| {
+            let mut command = AsyncCommand::new("curl");
+            command
+                .args(["--disable", "--silent", "--show-error", "--max-time", "5"])
+                .arg("--cacert")
+                .arg(ca)
+                .args(["--noproxy", "*", "--resolve"])
+                .arg(format!("{host}:{port}:127.0.0.1"))
+                .arg(format!("https://{host}:{port}/"));
+            // This ephemeral fixture CA has no CRL distribution points.
+            // Schannel still verifies trust and hostname with best-effort revocation.
+            #[cfg(windows)]
+            command.arg("--ssl-revoke-best-effort");
+            command
+        };
+        for (host, ca) in [
+            ("wrong.example.test", ca_path.as_path()),
+            ("api.example.test", unrelated_ca_path.as_path()),
+        ] {
+            let rejected = curl(host, ca).output().await.expect("curl is required");
+            assert_eq!(
+                rejected.status.code(),
+                Some(60),
+                "curl must reject an untrusted certificate or wrong hostname: {}",
+                String::from_utf8_lossy(&rejected.stderr)
+            );
+        }
+        let output = curl("api.example.test", &ca_path)
             .output()
             .await
             .expect("curl is required for the TLS interoperability regression test");
