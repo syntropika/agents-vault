@@ -642,7 +642,11 @@ fn copy_generation(
     target_transaction.commit()?;
     transaction.commit()?;
     drop(target);
-    fs::File::open(destination)?.sync_all()?;
+    OpenOptions::new()
+        .write(true)
+        .open(destination)?
+        .sync_all()
+        .context("cannot flush rotated vault database")?;
     sync_parent(destination)
 }
 
