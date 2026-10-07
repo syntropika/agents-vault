@@ -20,7 +20,7 @@ Use the current stable Rust/Cargo release and authenticate with crates.io using 
 
    ```sh
    cargo test --locked -p agents-vault -p av-core --all-targets
-   cargo publish --workspace --locked --dry-run
+   cargo publish --workspace --locked --dry-run --allow-dirty
    ```
 
    Cargo resolves workspace dependencies in publication order and verifies extracted archives. Inspect the generated `.crate` archives under `target/package/` before uploading. The broker archive must contain `assets/index.html` and its compiled assets; the MCP archive must contain `assets/mcp-app.html`.
@@ -29,10 +29,12 @@ Use the current stable Rust/Cargo release and authenticate with crates.io using 
 
 ## Publish
 
+Generated assets and package-local license copies are intentionally ignored by Git. After verifying a clean source tree and auditing the generated archives, `--allow-dirty` permits Cargo to include these reviewed build outputs. Do not use it to bypass unreviewed source changes.
+
 For the initial coordinated workspace release:
 
 ```sh
-cargo publish --workspace --locked
+cargo publish --workspace --locked --allow-dirty
 ```
 
 Later releases should select only new versions with `-p PACKAGE`. Publish new dependency versions before packages that require them. crates.io versions cannot be overwritten; consult the [Cargo publishing guide](https://doc.rust-lang.org/cargo/reference/publishing.html).
