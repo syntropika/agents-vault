@@ -14,7 +14,7 @@
   --sl-color-accent: #ececec;
   --sl-color-accent-high: #ffffff;
   --sl-color-bg-nav: #212121;
-  --sl-content-width: 48rem;
+  --sl-content-width: 44rem;
   --sl-sidebar-width: 17rem;
   --sl-text-h1: 2.25rem;
   --sl-text-h2: 1.55rem;
@@ -45,10 +45,14 @@ starlight-search button[data-open-modal] { border-radius: 999px; }
 .sidebar-content summary { font-size: .8rem; }
 .sidebar-content a[aria-current='page'] { font-weight: 600; }
 h1, h2, h3 { letter-spacing: -.025em; text-wrap: balance; }
-.sl-markdown-content { font-size: .96rem; line-height: 1.75; }
-.sl-markdown-content :is(h2, h3) { margin-top: 2.4rem; }
-.sl-markdown-content p, .sl-markdown-content li { max-width: 72ch; }
-.sl-markdown-content table { font-size: .85rem; font-variant-numeric: tabular-nums; }
+.sl-markdown-content { color: var(--sl-color-gray-1); font-size: 1rem; line-height: 1.8; }
+.sl-markdown-content > p:first-child { font-size: 1.1rem; line-height: 1.7; }
+.sl-markdown-content h2 { margin-top: 3rem; }
+.sl-markdown-content h3 { margin-top: 2rem; }
+.sl-markdown-content p, .sl-markdown-content li { max-width: 65ch; }
+.sl-markdown-content li + li { margin-top: .65rem; }
+.sl-markdown-content table { font-size: .925rem; line-height: 1.65; font-variant-numeric: tabular-nums; }
+.sl-markdown-content :is(th, td) { padding-block: .75rem; vertical-align: top; }
 .sl-markdown-content pre { border-radius: 14px; }
 .pagination-links a { border-radius: 14px; }
 .page-tools { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-top: 1rem; }
@@ -57,7 +61,6 @@ h1, h2, h3 { letter-spacing: -.025em; text-wrap: balance; }
   border-radius: 999px; padding: .4rem .8rem; font: inherit; font-size: .78rem; cursor: pointer; text-decoration: none;
 }
 .page-tools a:hover, .page-tools button:hover { background: var(--sl-color-accent-low); }
-.page-tools .boundary-label { color: var(--sl-color-gray-2); font-size: .76rem; margin-right: auto; }
 .page-tools button:disabled { opacity: .65; cursor: wait; }
 .page-tools [role='status'] { font-size: .75rem; color: var(--sl-color-gray-2); }
 @media (prefers-reduced-motion: no-preference) {

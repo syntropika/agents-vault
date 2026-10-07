@@ -1,14 +1,18 @@
 # MCP Apps
 
-The `av-mcp` adapter lets a compatible harness display a frozen action and submit the operator's decision. It holds no credential value and cannot start execution.
+Approve or deny an existing CLI action inside a compatible MCP client. The `av-mcp` adapter displays the request; the original `av run` process executes it after approval.
 
 ## Prerequisites
 
-- An operator-configured Linux or macOS broker with a matching synthetic action recipe.
-- An unlocked operator console with action execution enabled.
-- A harness advertising MCP Apps support for `text/html;profile=mcp-app`.
+Before adding the adapter, prepare:
 
-Clients without that capability are refused. There is no automatic chat-confirmation fallback. See [actions and approvals](actions-and-approvals.md) for service prerequisites.
+- A Linux or macOS broker with a matching **synthetic** action recipe.
+- An unlocked operator console with actions enabled.
+- A trusted client that advertises MCP Apps support for `text/html;profile=mcp-app`.
+
+Follow [actions and approvals](actions-and-approvals.md) to prepare the service and recipe.
+
+Clients without MCP Apps support are refused. There is no automatic chat-confirmation fallback.
 
 ## Install the adapter
 
@@ -16,28 +20,64 @@ Clients without that capability are refused. There is no automatic chat-confirma
 cargo install av-mcp --locked
 ```
 
-Release packages embed the App interface; no Node runtime is needed after installation. Register the absolute path to the installed `av-mcp` executable as a stdio MCP server. Add `AVD_AGENT_SOCKET` using your installed broker's agent socket:
+Release packages include the App interface. No Node runtime is needed after installation.
 
-| Platform | Installed agent socket |
+In your client's MCP configuration:
+
+1. Add the absolute path to the installed `av-mcp` executable as a **stdio** server.
+2. Set the non-secret `AVD_AGENT_SOCKET` to the installed agent socket.
+
+| Platform | Socket |
 | --- | --- |
 | Linux | `/run/agents-vault/agent.sock` |
 | macOS | `/private/var/db/agents-vault/agent/agent.sock` |
 
-Do not put a vault passphrase or administration token in the harness configuration.
+Keep vault passphrases and administration tokens out of the client configuration.
 
 ## Connect and approve
 
-1. Call `connect_approval` and note the session ID displayed by its App.
-2. In the authenticated console, open Settings and enroll that exact session ID.
-3. Refresh the App connection. Enrollment lasts up to 15 minutes.
-4. Start the matching `av run`. It waits and reports a public request ID.
-5. Call `request_proxy_task` with that ID and the exact frozen intent.
-6. Review the command, credential version, destination, runtime, and quotas in the App. Choose **Approve action** or **Deny**.
+### 1. Enroll the client
 
-The original waiting CLI owns execution and resumes after approval. Approval permits one attempt within 60 seconds. Closing its connection revokes pending requests and active grants; reconnecting does not restore authority.
+1. Call `connect_approval`. Its App shows a session ID.
+2. In the authenticated operator console, open **Settings**, refresh the session list, and enroll that exact ID.
+3. Refresh the App connection to confirm enrollment.
+
+Enroll within **two minutes**. Once enrolled, the session may decide up to **32 adopted requests** over **15 minutes**.
+
+Only enroll a client you trust to enforce App-only decision tools. See the [trust boundary](#trust-boundary) below.
+
+### 2. Start and attach a request
+
+Start the matching `av run` and keep it running. It prints a public request ID while waiting for approval.
+
+Call `request_proxy_task` with:
+
+| Argument | Value |
+| --- | --- |
+| `request_id` | The ID printed by the still-running CLI. |
+| `connection` | The exact connection ID, such as `service/work`. |
+| `connection_version` | The version pinned in the project and saved recipe. |
+| `host` | The exact destination host in that recipe. |
+| `command` | The executable and arguments as an exact array of strings. |
+
+The broker compares these values with the pending request. Changed commands, versions, or hosts are refused. A request must still be pending and cannot already belong to another MCP session.
+
+The adapter cannot create a request without an existing CLI execution owner.
+
+### 3. Review the App
+
+Check the command, credential version, destination, runtime, and quotas. Choose **Approve action** or **Deny**.
+
+Approval allows one execution attempt within **60 seconds**. The original CLI resumes automatically; the adapter never takes over its execution connection.
+
+Closing the CLI connection revokes its pending requests and active grants. Reconnecting does not restore that authority.
 
 ## Trust boundary
 
-Enrollment delegates bounded decisions to the harness. Agents Vault trusts that harness to enforce App-only tools and distinguish operator interaction from model calls; the protocol does not prove a human click cryptographically. An enrolled malicious harness can synthesize decisions.
+Enrollment gives the selected client permission to submit bounded decisions. It does not grant credential administration or execution authority.
 
-Use the authenticated console or private operator terminal when that delegation is unsuitable. Protocol details and test evidence are in [console and MCP approvals](../approval-flow.md).
+Agents Vault trusts the client to enforce App-only tools and separate human interaction from model calls. The protocol does not cryptographically prove a human click. A malicious enrolled client can synthesize approvals.
+
+Use the authenticated console or private operator terminal if you do not want to delegate decisions to a client.
+
+Synthetic tests cover the official MCP Apps SDK bridge and the Rust adapter. They do not establish support or enforcement in every installed client. See [console and MCP approvals](../approval-flow.md) for protocol details and test evidence.

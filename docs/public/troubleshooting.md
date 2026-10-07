@@ -1,30 +1,129 @@
 # Troubleshooting
 
-Start by identifying the path: public configuration, direct secret delivery, same-user proxy preview, or brokered action. Local direct-vault commands and installed service commands operate on different vaults.
+Find the symptom below, then check the workflow involved. Local vault commands and installed service commands use separate stores.
 
-| Symptom | Check and next step |
-| --- | --- |
-| `av` is not found | Install with `cargo install agents-vault --locked`. Add Cargo's `bin` directory to `PATH`; see [installation](installation.md#make-av-available-in-your-shell). |
-| Cargo cannot compile the package | Check the Rust version and native build prerequisites in [installation](installation.md#prerequisites). Cargo installs from source. |
-| Configuration already exists | `init` and `import-env` create a new file. Choose a fresh project or an unused `--config` path. |
-| Unknown environment or override name | Define the environment in `av.toml`; overrides can replace only existing value names. |
-| Missing secret or invalid value type | Confirm the project reference and selected environment. `av check` validates required generic secrets after unlocking the local vault. |
-| Direct release denied | Inspect `av secret policy NAME` from an operator terminal. Grant the exact executable and arguments with the same configuration, environment, and directory. |
-| Connection version changed | Inspect `av connect show ID` or `av protected connect show ID` in the relevant vault. Review the new version before updating a request or grant. |
-| Broker rejects a project configuration | The current path requires exactly one selected connection value. Its version and command must match the installed recipe. |
-| Credential edits or action saves are unavailable | Pause action execution in Settings before changing the service configuration. |
-| Saved action cannot run | Saving revokes affected permissions. Grant the exact recipe again before enabling actions. |
-| MCP client cannot initialize | Check MCP Apps capability support and that `av-mcp` was built with the App assets. There is no chat fallback. |
-| MCP session cannot decide | Enroll the exact App session ID in the authenticated console. Check expiry, action ownership, and whether the request belongs to that adapter session. |
-| MCP request adoption is refused | Keep the original `av run` process running, use its existing request ID, and match the exact connection version, host, and command. The request must still be pending and cannot belong to another MCP session. |
-| Broker approval times out | The CLI waits for up to 300 seconds. Start a new matching request and keep it running while the operator reviews it. |
-| A reconnecting client cannot execute or finish | Execution authority belongs to the original IPC connection. A public ID cannot restore it; create a new request instead. |
-| Console is unavailable | Check the daemon's `AVD_APPROVAL_UI=1` setting and embedded web assets. It uses loopback port 14323. |
-| Proxy settings are rejected | The broker endpoint is fixed at `http://127.0.0.1:14322`; saved settings cannot redirect it to another endpoint. |
-| An approved action expires or was already consumed | Review its authoritative state and request a new matching attempt. Approval grants one attempt, not an unlimited reusable permission. |
+## Installation
 
-Do not troubleshoot by weakening a destination, granting an unrelated command, or copying a credential into a prompt. Diagnose proxy behavior using synthetic values and a disposable development broker.
+### av is not found
 
-When reporting a problem, include the CLI version, operating system, delivery path, command shape with sensitive arguments removed, and the error message after reviewing it for secrets. Do not attach a vault, key envelope, recovery file, passphrase, proxy capability, or raw secret environment.
+Install with `cargo install agents-vault --locked`. Open a new terminal, then check Cargo's executable directory in `PATH`.
 
-For broker execution, follow [actions and approvals](actions-and-approvals.md). The requesting CLI waits and executes automatically after approval; the former `--resume` option is removed.
+See [make av available in your shell](installation.md#make-av-available-in-your-shell).
+
+### Cargo cannot compile the package
+
+Check your Rust version and native build tools. Cargo compiles the CLI from source.
+
+See [installation prerequisites](installation.md#prerequisites).
+
+## Project configuration
+
+### Configuration already exists
+
+`init` and `import-env` create a new file. Use a fresh project directory or an unused `--config` path.
+
+### Unknown environment or override name
+
+Define the environment in `av.toml`. An override can replace an existing value name, but cannot add a new one.
+
+### Missing secret or invalid value type
+
+Check the project name in the secret reference and the selected environment. Run `av check`; required generic secrets are checked after unlocking the local vault.
+
+See [configuration and delivery](configuration-and-delivery.md).
+
+## Credential permissions
+
+### Direct release denied
+
+From the operator terminal, inspect the policy:
+
+```text
+av secret policy NAME
+```
+
+Grant the exact executable and arguments. Use the same configuration, environment, and working directory for the grant and the run.
+
+### Connection version changed
+
+Inspect the record in the relevant vault:
+
+```text
+av connect show ID
+av protected connect show ID
+```
+
+Use the local or protected command as appropriate. Review the new version before updating the project reference or granting access again.
+
+## Action configuration
+
+### Broker rejects the project
+
+The current broker workflow requires exactly one selected connection value. Its version and command must match the saved recipe.
+
+### Credential edits or action saves are unavailable
+
+Pause actions in **Settings** before editing the service configuration.
+
+### A saved action cannot run
+
+Saving revokes the affected permissions. Grant the exact saved recipe again, then enable actions.
+
+See [actions and approvals](actions-and-approvals.md).
+
+## Waiting or expired actions
+
+### Broker approval times out
+
+The CLI waits for up to 300 seconds. Start a new matching request and keep it running while you review it.
+
+### An approved action expired or was already used
+
+Approval allows one attempt. Review its current state and request a new matching attempt.
+
+### A reconnecting client cannot execute or finish
+
+Authority belongs to the original live CLI connection. A public ID cannot restore it. Start a new request.
+
+The requesting CLI executes automatically after approval. There is no separate resume command.
+
+## MCP Apps
+
+### The client cannot initialize
+
+Check that the client advertises MCP Apps support and that the adapter includes its App assets. Release packages embed those assets.
+
+Clients without Apps support are refused; there is no chat fallback.
+
+### The session cannot decide
+
+Enroll the exact session ID displayed by the App in the authenticated console. Check whether the session expired and whether it adopted this request.
+
+### Request adoption is refused
+
+Keep the original `av run` process running. Use its existing request ID and the exact connection version, host, and command.
+
+The request must still be pending and cannot belong to another MCP session. See the [MCP Apps workflow](mcp-apps.md).
+
+## Console and proxy
+
+### The console is unavailable
+
+Check that the daemon is configured with `AVD_APPROVAL_UI=1` and includes web assets. The console uses loopback port `14323`.
+
+### Proxy settings are rejected
+
+The broker endpoint is fixed at `http://127.0.0.1:14322`. Saved settings cannot redirect it to another endpoint.
+
+## Report a problem
+
+Include:
+
+- The CLI version and operating system.
+- The delivery mode you used.
+- The command shape, with sensitive arguments removed.
+- The error message, after checking it for secrets.
+
+Do not attach vaults, key envelopes, recovery files, passphrases, proxy capabilities, or raw secret environments.
+
+Use synthetic credentials and a disposable development broker for proxy debugging. Do not broaden permissions or copy credentials into prompts to get past an error.

@@ -1,68 +1,81 @@
 # Installation
 
-Install the `agents-vault` package from [crates.io](https://crates.io/crates/agents-vault). Its executable is named `av`.
+Install `agents-vault` from [crates.io](https://crates.io/crates/agents-vault). The installed command is `av`.
 
 ## Prerequisites
 
-Use Rust 1.88 or newer, including Cargo. [Rust's installation guide](https://www.rust-lang.org/tools/install) explains how to install or update the toolchain.
+You need **Rust 1.88 or newer**, including Cargo. Follow [Rust's installation guide](https://www.rust-lang.org/tools/install) to install or update it.
 
-Cargo compiles the CLI and its bundled SQLCipher/OpenSSL dependencies from source. You need native build tools:
+Cargo builds the CLI from source, including SQLCipher and OpenSSL. Install your platform's build tools first:
 
-| Platform | Build prerequisites |
+| Platform | Required tools |
 | --- | --- |
 | Linux | A C compiler, linker, `make`, and Perl. Use your distribution's development toolchain packages. |
-| macOS | Xcode Command Line Tools, installed with `xcode-select --install`. |
-| Windows | Visual Studio Build Tools with the Desktop development with C++ workload and Windows SDK, plus Perl and NASM for vendored OpenSSL. Use a native MSVC Rust toolchain. |
+| macOS | Xcode Command Line Tools: `xcode-select --install`. |
+| Windows | Visual Studio Build Tools with Desktop development with C++ and the Windows SDK; Perl and NASM for OpenSSL. Use the MSVC Rust toolchain. |
 
 ## Install
 
 ```sh
 cargo install agents-vault --locked
 av --version
-av --help
 ```
 
-`--locked` uses the dependency versions shipped with the release. Installation does not create or unlock a vault.
+`--locked` uses the dependency versions included with the release. This installs the executable; it does not create or unlock a vault.
+
+**Next:** follow the [quickstart](quickstart.md) to run a project.
 
 ## Make av available in your shell
 
-Cargo installs executables in `$CARGO_HOME/bin`, normally `~/.cargo/bin` on Linux and macOS and `%USERPROFILE%\.cargo\bin` on Windows. Add that directory to `PATH` if `av` is not found. Rustup normally configures this for you; open a new terminal after installation.
+If your shell cannot find `av`, open a new terminal first. Rustup normally adds Cargo's executable directory to `PATH`.
+
+If it is still missing, add the relevant directory:
+
+| Platform | Default directory |
+| --- | --- |
+| Linux and macOS | `~/.cargo/bin` |
+| Windows | `%USERPROFILE%\.cargo\bin` |
+
+A custom `CARGO_HOME` changes that location to its `bin` subdirectory.
 
 ## Update or uninstall
 
-To install the latest release again:
+Install the latest release:
 
 ```sh
 cargo install agents-vault --locked --force
 ```
 
-To pin a release, add `--version 0.1.0`. To remove the CLI:
+Add `--version 0.1.0` to install a specific release.
+
+Remove the executable:
 
 ```sh
 cargo uninstall agents-vault
 ```
 
-Uninstalling the executable does not remove your project configuration, vault, or recovery material.
+Your project files, vault, and recovery material remain after uninstalling.
 
 ## Protected services and MCP
 
-The CLI installation supports project configuration and local direct delivery. It does not install a privileged service, create service identities, or configure a harness automatically.
+The CLI supports project variables and local direct secret delivery. A protected service needs a separate installation:
 
-Linux and macOS protected services require an operator-reviewed platform installation. See the [Linux service instructions](../../packaging/linux/README.md) and [macOS service instructions](../../packaging/macos/README.md). Proxy credentials remain synthetic while the [custody gates](limits-and-trust.md) are open.
+- [Linux service installation](../../packaging/linux/README.md)
+- [macOS service installation](../../packaging/macos/README.md)
 
-The separate MCP Apps adapter is described in [MCP Apps](mcp-apps.md).
+The service uses a separate vault. Proxy credentials remain synthetic while the [custody checks](limits-and-trust.md) are incomplete.
+
+To approve actions through a compatible client, install the separate [MCP Apps adapter](mcp-apps.md).
 
 ## Build from source
 
-For development, clone the [repository](https://github.com/syntropika/agents-vault) and run from its root:
+For development, clone the [repository](https://github.com/syntropika/agents-vault), then run from its root:
 
 ```sh
 cargo build --locked -p agents-vault --bin av
 ./target/debug/av --help
 ```
 
-On Windows, the executable is `target\debug\av.exe`. Building the broker and MCP adapter from source also requires their web assets; see [console and MCP build instructions](../approval-flow.md#build-and-configure).
+On Windows, the executable is `target\debug\av.exe`.
 
-## Next step
-
-Follow the [quickstart](quickstart.md) to validate a project and authorize direct credential delivery.
+Source builds of the broker and MCP adapter also need their web assets. See [console and MCP build instructions](../approval-flow.md#build-and-configure).

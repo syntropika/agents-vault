@@ -1,21 +1,21 @@
 # Configuration and delivery
 
-`av.toml` describes a project and its requested values. It contains public literals or credential references. A reference describes what a command needs; it does not grant permission to release a credential.
+Use `av.toml` to declare project variables and credential references. This page shows how to define values, select an environment, and reference a proxy connection.
 
 ## Choose a delivery path
 
-| Path | What the command receives | Current use |
+| Path | The command receives | Current use |
 | --- | --- | --- |
-| Public configuration | Selected literal values in its environment | Local project configuration |
-| Direct secret delivery | Real selected secret values in its environment | Explicitly trusted commands |
-| Same-user proxy preview | A placeholder and proxy settings; the proxy inserts a credential upstream | Synthetic experiments; no protected custody |
-| Brokered host proxy | An action capability and temporary proxy settings; the broker holds the synthetic credential | Approved synthetic actions with an installed matching recipe |
+| Public configuration | Public values in its environment. | Local project variables. |
+| Direct secrets | Real secret values in its environment. | Explicitly trusted code. |
+| Proxy preview | A placeholder and temporary proxy settings. | Synthetic experiments under your user identity. |
+| Brokered proxy | A temporary proxy capability and settings. | Approved synthetic actions through an installed service. |
 
-Direct delivery cannot hide a value from the recipient. Proxy delivery avoids giving the original credential as the selected environment value, but requires a compatible command and a trustworthy broker boundary. It does not confine the host command. Read [limits and trust](limits-and-trust.md) before choosing it.
+**Direct delivery exposes the secret to the command.** A proxy avoids handing it the original credential, but does not isolate the command. See [limits and trust](limits-and-trust.md).
 
 ## Declare values
 
-The current schema is `2`. Values support scalar `string`, `integer`, and `boolean` types. Each declaration has at most one source:
+The current schema is `2`. Start with a public value:
 
 ```toml
 schema = 2
@@ -26,24 +26,49 @@ id = "example"
 [values.APP_ENV]
 type = "string"
 value = "development"
+```
 
+Supported scalar types are `string`, `integer`, and `boolean`. Each value may have at most one source. Use `required = true` when the value must be present.
+
+### Add a direct secret reference
+
+```toml
 [values.SERVICE_TOKEN]
 type = "string"
 secret = "secret://example/token"
 required = true
+```
 
+The project name in the reference must match `[project].id`. Store and grant the secret separately; see the [quickstart](quickstart.md).
+
+### Select an environment
+
+Add an override for an existing value:
+
+```toml
 [environments.production.values.APP_ENV]
 type = "string"
 value = "production"
 ```
 
-Select an environment with `av check --env production` or `av run --env production -- COMMAND`. Overrides replace declarations for existing value names. They cannot introduce unknown names. Interpolation and executable resolver expressions are unsupported. Secret references must belong to the declared project.
+Then select it when checking or running:
 
-The default configuration path is `./av.toml`. `av --config PATH` selects another file. Local direct-vault commands also accept `--vault PATH`; installed protected administration rejects these overrides.
+```sh
+av check --env production
+av run --env production -- /usr/bin/printenv APP_ENV
+```
+
+The run example uses Linux or macOS. Overrides replace existing declarations; they cannot introduce new value names. Interpolation and executable resolver expressions are unsupported.
+
+### Select another file
+
+`av` reads `./av.toml` by default. Use `av --config PATH` to select another file.
+
+Local vault commands also accept `--vault PATH`. Installed protected administration rejects those project and vault overrides.
 
 ## Reference a broker connection
 
-A proxy project uses a versioned connection declaration:
+For a proxy action, use a versioned connection instead of a direct secret reference:
 
 ```toml
 schema = 2
@@ -58,10 +83,30 @@ delivery = "proxy"
 required = true
 ```
 
-This is a separate example from the direct configuration above. The current broker path requires exactly one selected connection value and no additional selected values. The broker independently checks the connection version and the installed recipe. A local direct-vault connection is never copied to the service vault automatically.
+Use this as a separate configuration. The current broker workflow requires **exactly one selected connection value**, with no additional selected values.
 
-`av check` checks connection declarations structurally; it does not verify the service's credential version or grant. `av placeholders` emits `<AV_CONNECTION:service/work@1>` for this reference without fetching its credential.
+Before running it:
 
-The base CLI is provider-neutral. A label such as `service/work` does not establish API permissions or provider compatibility.
+1. Add the synthetic credential to the installed service vault.
+2. Configure and grant a matching action recipe.
+3. Pin the recipe's current connection version in `av.toml`.
 
-With a matching synthetic recipe, `av run -- COMMAND` or `av run --broker -- COMMAND` keeps its original broker connection open while waiting for a decision. Approval lets that CLI execute automatically. The printed request ID can be used to review or explicitly adopt the live request through MCP; it does not let another connection execute it. See [actions and approvals](actions-and-approvals.md).
+A local connection is not copied to the service automatically. The label `service/work` does not establish provider compatibility or API permissions.
+
+### Validate or export the declaration
+
+`av check` checks the declaration's structure. It does not verify the service's current version or permissions.
+
+`av placeholders` emits `<AV_CONNECTION:service/work@1>` without retrieving the credential.
+
+### Run the action
+
+Use the exact executable and arguments from the saved recipe:
+
+```text
+av run -- /absolute/path/to/configured-command argument
+```
+
+The CLI waits for approval, then executes automatically on the same connection. `av run --broker -- COMMAND` also selects the project's connection.
+
+Follow [actions and approvals](actions-and-approvals.md) for the full review workflow.

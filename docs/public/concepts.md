@@ -1,37 +1,47 @@
 # Core concepts
 
-Agents Vault separates project configuration, stored credentials, permission, and execution. A project can request a value; it cannot grant itself access.
+Four pieces determine how a command gets a secret: project configuration, a stored credential, permission, and approval.
 
 ## Project configuration
 
-`av.toml` holds public values and references such as `secret://example/token`. Environment overrides select different values without copying resolved secrets into the project. `av check` validates the selected configuration; `av placeholders` writes a shareable dotenv template.
+`av.toml` declares what your project needs:
 
-See [configuration and delivery](configuration-and-delivery.md).
+- **Public values**, such as `APP_ENV = "development"`.
+- **Secret references**, such as `secret://example/token`.
+- **Environment overrides**, such as a different public value for production.
+
+A reference does not give the project access to a secret. `av check` validates the configuration; `av placeholders` writes a shareable dotenv template.
+
+[Configure your project →](configuration-and-delivery.md)
 
 ## Credentials and connections
 
-A credential is an encrypted secret referenced by name. A connection adds an ID, exact destination host, version, and lifecycle around a credential. A local direct vault and an installed service vault are separate stores.
+A **secret** is an encrypted value with a name. A **connection** also records a destination host and version.
 
-SQLCipher is the current storage adapter. Native keyrings are planned. Storage protects values at rest; it does not decide which command may receive them.
+There are two separate stores: the local vault used for direct delivery, and the installed service vault. Adding a credential to one does not add it to the other.
 
-See [credential lifecycle](credential-lifecycle.md).
+Storage currently uses SQLCipher. Native keyring adapters are planned.
+
+[Manage credentials →](credential-lifecycle.md)
 
 ## Permission and approval
 
-New credentials have no release grants. The operator grants an exact command and delivery context. A matching request may still require approval for each run. Unlocking a vault or saving an action does not approve execution.
+**Permission** defines which command may use a credential. New credentials start with no permission to release their values.
 
-An action is a bounded command recipe. Review shows the executable, arguments, credential version, destination, duration, and quotas. An approval permits one attempt; changing the request invalidates that decision.
+**Approval** authorizes a matching run. Having permission may still require approval each time. Unlocking the vault does not approve execution.
 
-See [actions and approvals](actions-and-approvals.md).
+For a proxy workflow, an **action** is a saved command recipe with a destination, credential version, duration, and request limits. Approving it permits one attempt.
+
+[Configure and approve an action →](actions-and-approvals.md)
 
 ## Delivery modes
 
-| Mode | Who receives the value? | Current use |
+| Mode | What happens | Use it for |
 | --- | --- | --- |
-| Direct | The approved command receives the real environment value. | Commands and dependencies you trust with the credential. |
-| Proxy preview | A proxy running under your identity substitutes a credential. | Same-user experiments; it does not provide protected custody. |
-| Brokered proxy | A service-held proxy inserts the synthetic credential upstream. | Reviewed synthetic actions with a matching installed recipe. |
+| Direct | The command receives the real secret in its environment. | Code you trust with that value. |
+| Proxy preview | A proxy running as your user adds the credential to outgoing requests. | Same-user experiments; this does not protect custody from that user. |
+| Brokered proxy | An installed service adds the synthetic credential to outgoing requests. | Reviewed synthetic actions with a matching recipe. |
 
-A proxy command keeps its original HTTPS destination. `av run` supplies temporary proxy settings rather than requiring a rewritten API URL.
+Proxy commands keep the original HTTPS destination. `av run` supplies temporary proxy settings, so you do not rewrite the API URL.
 
-Read [limits and trust](limits-and-trust.md) before choosing a delivery mode.
+**Important:** a proxy does not isolate the command or block all other network traffic. Read [limits and trust](limits-and-trust.md) before choosing a mode.

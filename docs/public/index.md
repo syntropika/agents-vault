@@ -1,32 +1,41 @@
 # Introduction
 
-Agents Vault (`av`) manages project configuration, encrypted credentials, and reviewed CLI actions locally. Declare readable references in `av.toml`, then decide how a trusted command may use their values.
+Agents Vault (`av`) lets you define project variables, store credentials locally, and choose which commands may use them.
+
+Your project keeps readable references in `av.toml`. The vault keeps the secret values.
 
 ## Start here
 
-1. [Install from crates.io](installation.md).
-2. [Run your first project](quickstart.md).
-3. [Understand configuration, permission, and delivery](concepts.md).
+1. **[Install av](installation.md)** — install the CLI from crates.io.
+2. **[Run your first project](quickstart.md)** — load a public variable, then authorize a trusted command to use a secret.
+3. **[Understand the concepts](concepts.md)** — learn how configuration, permission, and approval fit together.
 
 ## How it works
 
-A project requests a value. The vault checks the operator's permission. A matching run receives direct environment values, or requests a bounded synthetic proxy action for review. Project configuration cannot widen a stored grant.
+1. You declare the values a project needs in `av.toml`.
+2. You grant a command permission to use a credential.
+3. `av run` checks that permission and asks for approval when required.
 
-Direct delivery gives the command the real secret. Proxy actions currently use synthetic credentials; protected custody and installed-platform verification remain incomplete. Read [limits and trust](limits-and-trust.md) before choosing a workflow.
+**Direct delivery gives the command the real secret.** Use it only with code you trust. Proxy actions currently use synthetic credentials while protected custody is being verified. See [limits and trust](limits-and-trust.md).
 
 ## Guides
 
-| You want to… | Read |
+| I want to… | Guide |
 | --- | --- |
-| Resolve variables and select a delivery mode | [Configuration and delivery](configuration-and-delivery.md) |
-| Add, rotate, revoke, or remove credentials | [Credential lifecycle](credential-lifecycle.md) |
-| Configure and review an action | [Actions and approvals](actions-and-approvals.md) |
-| Approve from a compatible harness | [MCP Apps](mcp-apps.md) |
+| Define variables and environments | [Configuration and delivery](configuration-and-delivery.md) |
+| Import an existing dotenv file | [Dotenv import](quickstart.md#import-an-existing-dotenv-file) |
+| Add, rotate, or revoke credentials | [Credential lifecycle](credential-lifecycle.md) |
+| Review a command before it runs | [Actions and approvals](actions-and-approvals.md) |
+| Approve through an MCP Apps client | [MCP Apps](mcp-apps.md) |
 
 ## Reference and help
 
-Use the [CLI reference](cli-reference.md) for command groups and [troubleshooting](troubleshooting.md) for failed requests. The [implementation status](../implementation-status.md) records platform evidence and remaining gates.
+- [CLI reference](cli-reference.md) — command groups and options.
+- [Troubleshooting](troubleshooting.md) — common errors and next steps.
+- [Limits and trust](limits-and-trust.md) — what each mode protects and what it does not.
 
 ## For agents
 
-These guides are also published as Markdown, [an agent index](/llms.txt), and [a complete text bundle](/llms-full.txt). An agent can inspect public configuration and request an action; credential administration and permission changes belong to the operator. Never place credentials, passphrases, or recovery keys in an agent prompt.
+The same guides are available as [an agent index](/llms.txt) and [a complete text bundle](/llms-full.txt).
+
+An agent may inspect public configuration and request an action. The operator manages credentials and permissions. Keep credentials, passphrases, and recovery keys out of agent prompts.

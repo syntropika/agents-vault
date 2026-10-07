@@ -1,27 +1,33 @@
 # Quickstart
 
-This guide runs public project configuration without creating a vault. It then shows how direct secret delivery is authorized. Proxy execution has a separate [action workflow](actions-and-approvals.md).
+Run your first project variable, then give a trusted command access to a secret. The public-variable example needs no vault.
 
 ## Install the CLI
 
-With Rust 1.88 or newer and your platform's native build tools:
+Install [Rust 1.88 or newer and the required build tools](installation.md#prerequisites), then run:
 
 ```sh
 cargo install agents-vault --locked
 av --help
 ```
 
-The package is `agents-vault`; the command is `av`. See [installation](installation.md) for platform prerequisites, `PATH`, updates, and source builds. Cargo installation provides the CLI; setting up the protected service is a separate operator workflow. Platform evidence is recorded in [implementation status](../implementation-status.md).
+The package is named `agents-vault`; the command is `av`.
 
 ## Run public configuration
 
-In a new project directory:
+### 1. Create a project
+
+In a new project directory, run:
 
 ```sh
 av init --project example
 ```
 
-Add this declaration to the generated `av.toml`:
+This creates `av.toml`.
+
+### 2. Add a variable
+
+Add this block to `av.toml`:
 
 ```toml
 [values.APP_ENV]
@@ -30,33 +36,45 @@ value = "development"
 required = true
 ```
 
-Check the file and run a trusted command. On Linux or macOS this small example prints only the public value:
+### 3. Check and run
+
+On Linux or macOS:
 
 ```sh
 av check
 av run -- /usr/bin/printenv APP_ENV
 ```
 
-Expected output includes `development`. `av check` validates the selected configuration; it does not approve future execution.
+The command prints `development`.
+
+`av check` validates your configuration. It does not approve a later run.
 
 ## Add a direct secret
 
-From a trusted operator terminal, initialize the local vault once:
+**The command will receive the real secret.** Choose code you trust, including its libraries and subprocesses. Use a trusted operator terminal for these steps.
+
+### 1. Create the local vault
+
+Initialize the vault once:
 
 ```sh
 av setup --direct --recovery-file /private/path/av.recovery
 av status
 ```
 
-Replace `/private/path/av.recovery` with a private location outside the agent's reach and move the recovery material offline. Setup prompts for a passphrase. `av status` reports local initialization only; it does not check an installed broker. `av unlock --direct` verifies a passphrase for that process and immediately closes the vault.
+Replace the recovery path with a private location outside the agent's reach. Setup asks for a passphrase. Move the recovery file offline after creation.
 
-Add a value without putting it in a shell argument:
+### 2. Store the secret
 
 ```sh
 av secret add token
 ```
 
-Add its reference to `av.toml`:
+Enter its value at the hidden prompt. Avoid putting it in a command argument.
+
+### 3. Reference it in your project
+
+Add this block to `av.toml`:
 
 ```toml
 [values.SERVICE_TOKEN]
@@ -65,18 +83,24 @@ secret = "secret://example/token"
 required = true
 ```
 
-Choose an absolute executable and arguments that you trust with the value. Grant that exact command from the operator terminal, then run it with the same arguments:
+The project stores this reference, not the value.
+
+### 4. Grant and run the command
+
+Replace the executable and argument below with the exact command you trust:
 
 ```text
 av secret grant token -- /absolute/path/to/trusted-command argument
 av run -- /absolute/path/to/trusted-command argument
 ```
 
-Replace the executable and argument before running these commands. The default grant requires approval for each matching run. The prompt asks you to type `approve`. Direct delivery gives the child the real secret; its loaded code and subprocesses may read it. Changes to the executable, arguments, selected environment, configuration, or working directory can invalidate a grant. See [limits and trust](limits-and-trust.md).
+The default grant asks for approval on each matching run. Review the prompt and type `approve` to proceed.
+
+Use the same executable, arguments, configuration, environment, and working directory for the grant and the run. Changing them can invalidate the grant. Read [limits and trust](limits-and-trust.md) before using real credentials.
 
 ## Import an existing dotenv file
 
-Import requires a new configuration path, so use a fresh project directory or an explicit unused `--config` path:
+Use a fresh project directory or an unused `--config` path. Import creates a new configuration file:
 
 ```sh
 av import-env .env --project imported --public APP_ENV
@@ -84,4 +108,17 @@ av check
 av placeholders --output .env.example
 ```
 
-Every assignment is secret unless explicitly named with `--public`. Repeat the option for additional public values. Imported secrets start without release grants. The source `.env` remains plaintext; review the import and handle that file separately. The placeholder file contains public literals and references, never resolved credentials.
+- Every assignment is stored as a secret unless you name it with `--public`. Repeat that option for more public values.
+- Imported secrets have no release grants. Grant the intended command before running it.
+- `.env.example` contains public values and unresolved references.
+- The original `.env` stays plaintext. Review and handle that file separately.
+
+## Next steps
+
+- [Configuration and delivery](configuration-and-delivery.md) — environments, value types, and proxy references.
+- [Credential lifecycle](credential-lifecycle.md) — rotation and revocation.
+- [Actions and approvals](actions-and-approvals.md) — the separate synthetic proxy workflow.
+
+Installing the CLI does not install a protected service. See [installation](installation.md#protected-services-and-mcp) if you need that workflow.
+
+For verified platform workflows and remaining checks, see [implementation status](../implementation-status.md).
