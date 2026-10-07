@@ -36,7 +36,7 @@ New credentials have no release grants. For direct secrets, choose the executabl
 
 SQLCipher is the initial storage adapter. Native keyrings are planned. Proxy actions currently use synthetic credentials; the host command is not confined. Linux and macOS component tests exist, while installed-platform and whole-agent custody gates remain open.
 
-[Build the CLI](quickstart.md) · [See demonstrated behavior](../implementation-status.md)
+[Install from crates.io](installation.md) · [See demonstrated behavior](../implementation-status.md)
 
 ## Read it your way.
 

@@ -2,16 +2,16 @@
 
 This guide runs public project configuration without creating a vault. It then shows how direct secret delivery is authorized. Proxy execution has a separate [action workflow](actions-and-approvals.md).
 
-## Build from a checkout
+## Install the CLI
 
-Use Rust 1.88 or newer. From the repository root:
+With Rust 1.88 or newer and your platform's native build tools:
 
 ```sh
-cargo build --locked -p av --bin av
-./target/debug/av --help
+cargo install agents-vault --locked
+av --help
 ```
 
-The executable is `target/debug/av`. The commands below use `av`; use its absolute path or add that directory to your shell's `PATH` before changing directories. There is no package-manager installation claim in this guide. Platform evidence and packaging progress are listed in [implementation status](../implementation-status.md).
+The package is `agents-vault`; the command is `av`. See [installation](installation.md) for platform prerequisites, `PATH`, updates, and source builds. Cargo installation provides the CLI; setting up the protected service is a separate operator workflow. Platform evidence is recorded in [implementation status](../implementation-status.md).
 
 ## Run public configuration
 

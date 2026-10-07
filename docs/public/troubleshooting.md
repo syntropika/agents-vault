@@ -4,7 +4,8 @@ Start by identifying the path: public configuration, direct secret delivery, sam
 
 | Symptom | Check and next step |
 | --- | --- |
-| `av` is not found | Use the absolute path to the built `target/debug/av`, or add its directory to `PATH`. |
+| `av` is not found | Install with `cargo install agents-vault --locked`. Add Cargo's `bin` directory to `PATH`; see [installation](installation.md#make-av-available-in-your-shell). |
+| Cargo cannot compile the package | Check the Rust version and native build prerequisites in [installation](installation.md#prerequisites). Cargo installs from source. |
 | Configuration already exists | `init` and `import-env` create a new file. Choose a fresh project or an unused `--config` path. |
 | Unknown environment or override name | Define the environment in `av.toml`; overrides can replace only existing value names. |
 | Missing secret or invalid value type | Confirm the project reference and selected environment. `av check` validates required generic secrets after unlocking the local vault. |

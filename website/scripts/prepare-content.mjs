@@ -9,7 +9,11 @@ export const repository = 'https://github.com/syntropika/agents-vault';
 
 const descriptions = {
   index: 'Find the right workflow for configuration, credentials, actions, and trust.',
-  quickstart: 'Build the CLI, run public configuration, and authorize direct secret delivery.',
+  installation: 'Install and update agents-vault from crates.io, with platform build prerequisites.',
+  concepts: 'Understand project references, credentials, permissions, approvals, and delivery modes.',
+  'cli-reference': 'Find CLI commands, global options, and installed-service entry points.',
+  'mcp-apps': 'Install the approval adapter and enroll a compatible MCP Apps harness.',
+  quickstart: 'Install the CLI, run public configuration, and authorize direct secret delivery.',
   'configuration-and-delivery': 'Choose between environment values and the synthetic broker proxy.',
   'credential-lifecycle': 'Manage credentials, versions, grants, storage, and recovery.',
   'actions-and-approvals': 'Configure one active recipe and review requests through the console or MCP Apps.',

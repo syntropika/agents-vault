@@ -18,14 +18,23 @@ export default defineConfig({
         ThemeProvider: './src/components/ThemeProvider.astro',
       },
       sidebar: [
-        { label: 'Start', items: [{ label: 'Overview', slug: 'docs' }, { label: 'Quickstart', slug: 'docs/quickstart' }] },
-        { label: 'Use Agents Vault', items: [
-          { label: 'Configuration and delivery', slug: 'docs/configuration-and-delivery' },
-          { label: 'Credential lifecycle', slug: 'docs/credential-lifecycle' },
-          { label: 'Actions and approvals', slug: 'docs/actions-and-approvals' },
+        { label: 'Getting started', items: [
+          { label: 'Introduction', slug: 'docs' },
+          { label: 'Installation', slug: 'docs/installation' },
+          { label: 'Quickstart', slug: 'docs/quickstart' },
+          { label: 'Core concepts', slug: 'docs/concepts' },
         ] },
-        { label: 'Understand the boundary', items: [
+        { label: 'Guides', items: [
+          { label: 'Configuration and delivery', slug: 'docs/configuration-and-delivery' },
+          { label: 'Credentials', slug: 'docs/credential-lifecycle' },
+          { label: 'Actions and approvals', slug: 'docs/actions-and-approvals' },
+          { label: 'MCP Apps', slug: 'docs/mcp-apps' },
+        ] },
+        { label: 'Reference', items: [
+          { label: 'CLI commands', slug: 'docs/cli-reference' },
           { label: 'Limits and trust', slug: 'docs/limits-and-trust' },
+        ] },
+        { label: 'Help', items: [
           { label: 'Troubleshooting', slug: 'docs/troubleshooting' },
         ] },
       ],
