@@ -313,6 +313,26 @@ impl SecretPolicy {
 mod tests {
     use super::*;
 
+    fn native_request() -> SecretAccessRequest {
+        let directory = tempfile::tempdir().unwrap();
+        let config = directory.path().join("av.toml");
+        let source = b"exact policy bytes";
+        fs::write(&config, source).unwrap();
+        SecretAccessRequest::for_command(
+            &[
+                std::env::current_exe().unwrap().to_str().unwrap().into(),
+                "request".into(),
+            ],
+            &config,
+            source,
+            None,
+            DeliveryMode::ProtectedProxy,
+            Some("api.example.test"),
+        )
+        .unwrap()
+    }
+
+    #[cfg(unix)]
     fn mac_request() -> SecretAccessRequest {
         SecretAccessRequest::for_macos_service(
             &["/usr/bin/av-fixture".into(), "request".into()],
@@ -336,6 +356,7 @@ mod tests {
         .unwrap()
     }
 
+    #[cfg(unix)]
     #[test]
     fn macos_grant_denies_each_changed_identity_and_recipe_field() {
         let original = mac_request();
@@ -395,6 +416,7 @@ mod tests {
         assert!(SecretPolicy::default().authorization(&original).is_err());
     }
 
+    #[cfg(unix)]
     #[test]
     fn macos_binding_rejects_development_recipe_and_malformed_identity() {
         let original = serde_json::to_value(mac_request()).unwrap();
@@ -437,17 +459,17 @@ mod tests {
 
     #[test]
     fn native_requests_round_trip_without_a_macos_field() {
-        let mut native = serde_json::to_value(mac_request()).unwrap();
+        let mut native = serde_json::to_value(native_request()).unwrap();
         native.as_object_mut().unwrap().remove("macos_service");
         let parsed: SecretAccessRequest = serde_json::from_value(native.clone()).unwrap();
+        parsed.validate().unwrap();
         assert!(parsed.macos_service.is_none());
         assert_eq!(serde_json::to_value(parsed).unwrap(), native);
     }
 
     #[test]
     fn native_proxy_ca_digest_is_exact_and_cannot_be_downgraded() {
-        let mut request = mac_request();
-        request.macos_service = None;
+        let mut request = native_request();
         request.upstream_ca_sha256 = Some("a".repeat(64));
         let policy = SecretPolicy {
             grants: vec![SecretGrant {
@@ -483,8 +505,11 @@ mod tests {
             changed.delivery = delivery;
             assert!(changed.validate().is_err());
         }
-        let mut mac = mac_request();
-        mac.upstream_ca_sha256 = request.upstream_ca_sha256;
-        assert!(mac.validate().is_err());
+        #[cfg(unix)]
+        {
+            let mut mac = mac_request();
+            mac.upstream_ca_sha256 = request.upstream_ca_sha256;
+            assert!(mac.validate().is_err());
+        }
     }
 }
