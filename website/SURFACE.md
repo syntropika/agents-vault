@@ -10,7 +10,9 @@ The complete direction contract is the registered [public surface brief](../.imp
 
 A large two-line introduction and CLI/documentation actions sit beside overlapping project and credential-reference windows. A separate command → broker → HTTPS provider scene explains reviewed proxy delivery below the first viewport. The page continues through placeholder output, action review, a silent explainer, current limits, and documentation exports.
 
-Flat near-black surfaces, rounded windows and pills, restrained system type, and ice-blue actions, focus, selected labels, and connection traces define the public world. CSS geometry and inline SVG construct the scenes. Compact screens stack windows and the flow so their content remains readable.
+Flat near-black surfaces, rounded windows and pills, Geist sans and Geist Mono, and lavender actions, focus, selected labels, and connection traces define the public world. Structural page rails and boundary dividers establish the reading grid. Credential-reference details use separated transparent rows within their shared window. CSS geometry and inline SVG construct the scenes. Both landing and documentation load locally served variable Geist sans and Geist Mono through the shared font stylesheet; their SIL Open Font License is bundled with the fonts. Compact screens stack windows and the flow so their content remains readable.
+
+The public identity uses a compact closed A/V formed by two interlocking filled pieces with a symmetric A roof and triangular aperture. The canonical lavender tile and pale-white standalone glyph share the exact same two paths. Native SVG keeps both independent of typography. Static tile instances appear in the landing header, broker node, and documentation title; the generated favicon comes from the canonical tile.
 
 ## Interaction and motion
 

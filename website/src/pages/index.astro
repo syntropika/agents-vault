@@ -24,13 +24,14 @@ const canonical = Astro.site ? new URL('/', Astro.site).href : undefined;
   <head>
     <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="color-scheme" content="dark" />
     <title>Agents Vault — local configuration and credential access</title><meta name="description" content={landing.description} />
+    <link rel="preload" href="/fonts/geist-sans.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" /><link rel="canonical" href={canonical} />
     <link rel="alternate" type="text/markdown" href="/index.md" title="This page as Markdown" /><link rel="alternate" type="text/plain" href="/llms.txt" title="Agent documentation index" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <div class="site-shell">
-      <header class="site-header"><a class="brand" href="/" aria-label="Agents Vault home"><span class="brand-mark" aria-hidden="true">av</span>Agents Vault</a><nav aria-label="Main navigation"><a href="/docs/">Documentation</a><a href={repository}>GitHub</a></nav></header>
+      <header class="site-header"><a class="brand" href="/" aria-label="Agents Vault home"><img class="brand-mark" src="/brand/av-mark.svg" width="48" height="48" alt="" />Agents Vault</a><nav aria-label="Main navigation"><a href="/docs/">Documentation</a><a href={repository}>GitHub</a></nav></header>
       <main id="main">
         <section class="intro" aria-labelledby="headline">
           <div class="intro-copy"><h1 id="headline">{headline.map((line) => <span>{line}</span>)}</h1><p class="description">{intro[1]}</p><div class="intro-links"><a class="button primary" href="/docs/quickstart/">Start with the CLI <Mark name="arrow" /></a><a class="button secondary" href="/docs/">Read the docs</a></div></div>

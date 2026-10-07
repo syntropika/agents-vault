@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { copyFile, cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -67,6 +67,7 @@ export async function prepareContent() {
   await mkdir(path.join(generated, 'content/docs'), { recursive: true });
   await mkdir(path.join(generated, 'public/docs'), { recursive: true });
   await cp(path.join(websiteRoot, 'public'), path.join(generated, 'public'), { recursive: true });
+  await copyFile(path.join(websiteRoot, 'public/brand/av-mark.svg'), path.join(generated, 'public/favicon.svg'));
   await writeFile(path.join(generated, 'pages.json'), JSON.stringify(pages.map((page) => ({ ...page, humanBody: mapLinks(page.body, page.slug) }))));
   for (const page of pages) {
     if (page.slug !== 'landing') {

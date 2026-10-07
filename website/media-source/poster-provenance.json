@@ -5,12 +5,12 @@
   "generativeImageModel": null,
   "generatedRaster": false,
   "sourceArtwork": "source/main.jsx",
-  "sourceArtworkSha256": "fa46cf2dcc5d63ebf3cf5fd8d0de8b56e2ec16c8175f9b8c0b9f1ce0ed7004da",
+  "sourceArtworkSha256": "c367fdba135e53fa6027207189301a6c0370b4c45048b0243d3250b747f594b2",
   "timelineSource": "source/index.html",
   "timelineSourceSha256": "b597ad4427b69e4b12a9e5824bd0062875dadaf5c04787508450a269f20a9605",
   "renderer": "Forma native CompositionStage with local Chromium and FFmpeg export",
   "renderedVideo": "agents-vault-explainer.mp4",
-  "renderedVideoSha256": "d51759c235d6deefdac3bd86429743ee80e1d14ade8e7b6a4921baac2e1a8f68",
+  "renderedVideoSha256": "5ab3ba11f2824ff2adb964fd4720ceee715c01d836e747e85b8e80a35bceba89",
   "frameTimestampSeconds": 2.5,
   "frameIndexAt30Fps": 75,
   "dimensions": {
@@ -25,13 +25,29 @@
   "outputs": [
     {
       "path": "agents-vault-poster.png",
-      "sha256": "032dec3db0720211386060dff34ba30b12fb74c906966e3d360c504b5f3e67f2"
+      "sha256": "53643f3e2d575c388a14e0cf08f3a81d55a07f5d3e7e920cb6bed02bc9b51bbb"
     },
     {
       "path": "agents-vault-poster.webp",
-      "sha256": "cbb5db8c92648deb9699032351400b5fe92276a275946199243158587e1bc4e9"
+      "sha256": "6fbbf1419ff4931138bd2772159c26a6b8b1aa816833ade363b95ecb997800da"
     }
   ],
-  "contentProvenance": "Original English motion graphic grounded in the supplied Agents Vault product and public documentation. All shown values and recipes are illustrative synthetic data. The neutral artwork states concrete credential and host boundaries.",
-  "font": "Packaged Inter; font license is included in the reusable source."
+  "contentProvenance": "Original English motion graphic grounded in supplied Agents Vault product and public documentation, using the final canonical closed two-piece AV enclosure. All shown values and recipes are illustrative synthetic data. Supporting surfaces are neutral and the artwork states concrete credential and host boundaries.",
+  "font": "Packaged Inter; font license is included in the reusable source.",
+  "brandAsset": {
+    "path": "source/brand/av-mark.svg",
+    "sha256": "79a9321b6de095b98245450f2c40065e2f0a0d445d4bd285bfc83b9b0ed82218",
+    "symbolPath": "source/brand/av-symbol.svg",
+    "symbolSha256": "0d8323bbb0164f704a36711a4bf17b620f3f966bb8dec8a369bdbda56ca1191a",
+    "provenance": "Canonical closed two-piece AV enclosure supplied from the public website brand assets. Exact path geometry, balanced A arms, symmetric triangle, and fillets are preserved.",
+    "colors": {
+      "lavender": "#c4a7ff",
+      "ink": "#241735"
+    },
+    "openingMotion": {
+      "startSeconds": 0.55,
+      "endSeconds": 1.4,
+      "method": "Translate the exact two canonical paths from slight separation to their unchanged closed coordinates; one closure, no repeating cycle."
+    }
+  }
 }

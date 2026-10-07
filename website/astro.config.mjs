@@ -8,6 +8,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Agents Vault',
+      logo: { src: './public/brand/av-mark.svg', alt: '', replacesTitle: false },
       description: 'Local project configuration, encrypted credentials, and reviewed CLI actions.',
       favicon: '/favicon.svg',
       social: [{ icon: 'github', label: 'Source on GitHub', href: 'https://github.com/syntropika/agents-vault' }],
@@ -28,7 +29,7 @@ export default defineConfig({
           { label: 'Troubleshooting', slug: 'docs/troubleshooting' },
         ] },
       ],
-      head: [{ tag: 'link', attrs: { rel: 'alternate', type: 'text/plain', href: '/llms.txt', title: 'Agent documentation index' } }],
+      head: [{ tag: 'link', attrs: { rel: 'preload', href: '/fonts/geist-sans.woff2', as: 'font', type: 'font/woff2', crossorigin: '' } }, { tag: 'link', attrs: { rel: 'alternate', type: 'text/plain', href: '/llms.txt', title: 'Agent documentation index' } }],
     }),
   ],
 });
