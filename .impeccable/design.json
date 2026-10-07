@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-07T09:18:42.268693Z",
+  "generatedAt": "2026-10-07T09:40:19.667214Z",
   "title": "Design System: Agents Vault",
   "extensions": {
     "colorMeta": {
@@ -286,100 +286,100 @@
       },
       "website-accent": {
         "role": "primary",
-        "displayName": "Soft Lavender",
+        "displayName": "Pale Emphasis",
         "tonalRamp": [
-          "oklch(15% 0.06289 298.63)",
-          "oklch(26% 0.10902 298.63)",
-          "oklch(38% 0.12579 298.63)",
-          "oklch(49% 0.12579 298.63)",
-          "oklch(61% 0.12579 298.63)",
-          "oklch(72% 0.12579 298.63)",
-          "oklch(84% 0.10063 298.63)",
-          "oklch(95% 0.03145 298.63)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ]
       },
       "website-accent-hover": {
         "role": "primary",
-        "displayName": "Soft Lavender Hover",
+        "displayName": "White Hover",
         "tonalRamp": [
-          "oklch(15% 0.04308 299.59)",
-          "oklch(26% 0.07467 299.59)",
-          "oklch(38% 0.08616 299.59)",
-          "oklch(49% 0.08616 299.59)",
-          "oklch(61% 0.08616 299.59)",
-          "oklch(72% 0.08616 299.59)",
-          "oklch(84% 0.06893 299.59)",
-          "oklch(95% 0.02154 299.59)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ]
       },
       "website-accent-surface": {
         "role": "neutral",
-        "displayName": "Lavender Surface",
+        "displayName": "Neutral Emphasis Surface",
         "tonalRamp": [
-          "oklch(15% 0.02310 300.06)",
-          "oklch(26% 0.04003 300.06)",
-          "oklch(38% 0.04619 300.06)",
-          "oklch(49% 0.04619 300.06)",
-          "oklch(61% 0.04619 300.06)",
-          "oklch(72% 0.04619 300.06)",
-          "oklch(84% 0.03696 300.06)",
-          "oklch(95% 0.01155 300.06)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ]
       },
       "website-accent-ink": {
         "role": "primary",
-        "displayName": "Plum Ink",
+        "displayName": "Dark Ink",
         "tonalRamp": [
-          "oklch(15% 0.02878 302.23)",
-          "oklch(26% 0.04989 302.23)",
-          "oklch(38% 0.05756 302.23)",
-          "oklch(49% 0.05756 302.23)",
-          "oklch(61% 0.05756 302.23)",
-          "oklch(72% 0.05756 302.23)",
-          "oklch(84% 0.04605 302.23)",
-          "oklch(95% 0.01439 302.23)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ]
       },
       "website-light-accent": {
         "role": "primary",
-        "displayName": "Reading Purple",
+        "displayName": "Reading Charcoal",
         "tonalRamp": [
-          "oklch(15% 0.07025 299.52)",
-          "oklch(26% 0.12177 299.52)",
-          "oklch(38% 0.14050 299.52)",
-          "oklch(49% 0.14050 299.52)",
-          "oklch(61% 0.14050 299.52)",
-          "oklch(72% 0.14050 299.52)",
-          "oklch(84% 0.11240 299.52)",
-          "oklch(95% 0.03512 299.52)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ]
       },
       "website-light-accent-low": {
         "role": "neutral",
-        "displayName": "Light Lavender Surface",
+        "displayName": "Light Reading Surface",
         "tonalRamp": [
-          "oklch(15% 0.01526 302.31)",
-          "oklch(26% 0.02644 302.31)",
-          "oklch(38% 0.03051 302.31)",
-          "oklch(49% 0.03051 302.31)",
-          "oklch(61% 0.03051 302.31)",
-          "oklch(72% 0.03051 302.31)",
-          "oklch(84% 0.02441 302.31)",
-          "oklch(95% 0.00763 302.31)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ]
       },
       "website-light-accent-high": {
         "role": "primary",
-        "displayName": "Deep Reading Purple",
+        "displayName": "Deep Reading Ink",
         "tonalRamp": [
-          "oklch(15% 0.05692 302.76)",
-          "oklch(26% 0.09866 302.76)",
-          "oklch(38% 0.11384 302.76)",
-          "oklch(49% 0.11384 302.76)",
-          "oklch(61% 0.11384 302.76)",
-          "oklch(72% 0.11384 302.76)",
-          "oklch(84% 0.09107 302.76)",
-          "oklch(95% 0.02846 302.76)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ]
       },
       "website-divider": {
@@ -569,9 +569,9 @@
       "name": "Public Primary Action",
       "kind": "button",
       "refersTo": "website-button-primary",
-      "description": "Lavender pill action for the public CLI quickstart.",
+      "description": "Compact pale pill action for the public CLI quickstart.",
       "html": "<a class=\"ds-website-primary\" href=\"/docs/quickstart/\">Start with the CLI <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14m-6-6 6 6-6 6\"/></svg></a>",
-      "css": ".ds-website-primary{display:inline-flex;align-items:center;justify-content:center;gap:18px;min-height:50px;padding:13px 26px;border:1px solid var(--accent,#c4a7ff);border-radius:999px;background:var(--accent,#c4a7ff);color:var(--accent-ink,#241735);font:600 18px \"Geist\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;text-decoration:none}.ds-website-primary:hover{background:var(--accent-hover,#d6c2ff);border-color:var(--accent-hover,#d6c2ff)}.ds-website-primary:focus-visible{outline:2px solid var(--accent,#c4a7ff);outline-offset:5px}@media(prefers-reduced-motion:no-preference){.ds-website-primary{transition:background-color 160ms ease-out,border-color 160ms ease-out}}@media(max-width:500px){.ds-website-primary{min-height:44px;padding:10px 16px;font-size:13px;gap:12px}}"
+      "css": ".ds-website-primary{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:44px;padding:10px 20px;border:1px solid var(--accent,#ececec);border-radius:999px;background:var(--accent,#ececec);color:var(--accent-ink,#171717);font:600 14px \"Geist\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;text-decoration:none}.ds-website-primary:hover{background:var(--accent-hover,#ffffff);border-color:var(--accent-hover,#ffffff)}.ds-website-primary:focus-visible{outline:2px solid var(--accent,#ececec);outline-offset:5px}@media(prefers-reduced-motion:no-preference){.ds-website-primary{transition:background-color 160ms ease-out,border-color 160ms ease-out}}@media(max-width:500px){.ds-website-primary{min-height:44px;padding:10px 16px;font-size:13px;gap:12px}}.ds-website-primary{min-width:201px}@media(max-width:1280px){.ds-website-primary{min-width:0}}"
     },
     {
       "name": "Public Secondary Action",
@@ -579,7 +579,7 @@
       "refersTo": "website-button-secondary",
       "description": "Bordered public reading action with neutral hover feedback.",
       "html": "<a class=\"ds-website-secondary\" href=\"/docs/\">Read the docs</a>",
-      "css": ".ds-website-secondary{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:13px 26px;border:1px solid var(--border,#404040);border-radius:999px;background:transparent;color:var(--text,#ececec);font:400 18px \"Geist\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;text-decoration:none}.ds-website-secondary:hover{background:var(--subtle,#2f2f2f)}.ds-website-secondary:focus-visible{outline:2px solid var(--accent,#c4a7ff);outline-offset:5px}@media(prefers-reduced-motion:no-preference){.ds-website-secondary{transition:background-color 160ms ease-out}}@media(max-width:500px){.ds-website-secondary{min-height:44px;padding:10px 16px;font-size:13px}}"
+      "css": ".ds-website-secondary{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 20px;border:1px solid var(--border,#404040);border-radius:999px;background:transparent;color:var(--text,#ececec);font:400 14px \"Geist\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;text-decoration:none}.ds-website-secondary:hover{background:var(--subtle,#2f2f2f)}.ds-website-secondary:focus-visible{outline:2px solid var(--accent,#ececec);outline-offset:5px}@media(prefers-reduced-motion:no-preference){.ds-website-secondary{transition:background-color 160ms ease-out}}@media(max-width:500px){.ds-website-secondary{min-height:44px;padding:10px 16px;font-size:13px}}.ds-website-secondary{min-width:152px}@media(max-width:1280px){.ds-website-secondary{min-width:0}}"
     },
     {
       "name": "Public Example Selector",
@@ -587,7 +587,7 @@
       "refersTo": "website-environment-picker",
       "description": "Illustrative environment selection; shipping behavior updates the public value and status without resolving credentials.",
       "html": "<fieldset class=\"ds-website-picker\"><legend>Example environment</legend><button type=\"button\" aria-pressed=\"true\">Development</button><button type=\"button\" aria-pressed=\"false\">Production</button></fieldset>",
-      "css": ".ds-website-picker{display:flex;gap:3px;border:0;padding:3px;border-radius:999px;background:var(--subtle,#2f2f2f);margin:0;width:fit-content}.ds-website-picker legend{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.ds-website-picker button{border:0;background:transparent;padding:8px 11px;border-radius:999px;color:var(--muted,#b5b5b5);font:400 11px \"Geist\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;cursor:pointer}.ds-website-picker button[aria-pressed=\"true\"]{background:var(--accent-surface,#2e253e);color:var(--accent,#c4a7ff)}.ds-website-picker button:hover{color:var(--text,#ececec)}.ds-website-picker button:focus-visible{outline:2px solid var(--accent,#c4a7ff);outline-offset:-2px}@media(prefers-reduced-motion:no-preference){.ds-website-picker button{transition:background-color 160ms ease-out,color 160ms ease-out}}"
+      "css": ".ds-website-picker{display:flex;gap:3px;border:0;padding:3px;border-radius:999px;background:var(--subtle,#2f2f2f);margin:0;width:fit-content}.ds-website-picker legend{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.ds-website-picker button{border:0;background:transparent;padding:8px 11px;border-radius:999px;color:var(--muted,#b5b5b5);font:400 11px \"Geist\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;cursor:pointer}.ds-website-picker button[aria-pressed=\"true\"]{background:var(--accent-surface,#2f2f2f);color:var(--accent,#ececec)}.ds-website-picker button:hover{color:var(--text,#ececec)}.ds-website-picker button:focus-visible{outline:2px solid var(--accent,#ececec);outline-offset:-2px}@media(prefers-reduced-motion:no-preference){.ds-website-picker button{transition:background-color 160ms ease-out,color 160ms ease-out}}"
     },
     {
       "name": "Public Configuration Window",
@@ -601,29 +601,29 @@
       "name": "Public Brand Tile",
       "kind": "custom",
       "refersTo": "website-brand-mark",
-      "description": "Canonical lavender tile with a dark, two-piece interlocking A/V; public site placements are static.",
-      "html": "<svg class=\"ds-website-logo\" role=\"img\" aria-label=\"Agents Vault\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><rect width=\"128\" height=\"128\" rx=\"34\" fill=\"#c4a7ff\"/><g transform=\"translate(25 22) scale(.88)\"><g fill=\"#241735\"><path fill-rule=\"evenodd\" d=\"M1.879 34.121 L33.879 2.121A3 3 0 0 1 38.121 2.121L70.121 34.121A3 3 0 0 1 71 36.243L71 38.757A3 3 0 0 1 70.121 40.879L49.391 61.609A3 3 0 0 1 44.911 61.341L36.901 51.147A3 3 0 0 0 34.542 50L20 50A3 3 0 0 0 17 53L17 69A3 3 0 0 1 14 72L4 72A3 3 0 0 1 1 69L1 36.243A3 3 0 0 1 1.879 34.121Z M25.624 32.976 L35.576 23.024A0.6 0.6 0 0 1 36.424 23.024L46.376 32.976A0.6 0.6 0 0 1 45.951 34L26.049 34A0.6 0.6 0 0 1 25.624 32.976Z\" transform=\"translate(0 0)\"/><path d=\"M22 53H33Q35 53 37 56L45 66Q46 68 48 66L76 36Q79 33 82 34Q86 35 86 40V48Q86 51 83 54L53 88Q48 94 42 88L22 62Q20 59 20 56Q20 53 22 53Z\" transform=\"translate(0 0)\"/></g></g></svg>",
-      "css": ".ds-website-logo{display:block;width:46px;height:46px;flex:none}"
+      "description": "Canonical neutral tile with the aligned two-piece A/V, shared by documentation and the generated favicon.",
+      "html": "<svg class=\"ds-website-logo\" role=\"img\" aria-label=\"Agents Vault\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><rect width=\"128\" height=\"128\" rx=\"34\" fill=\"#ececec\"/><g transform=\"translate(25 22) scale(.88)\"><g fill=\"#171717\"><path fill-rule=\"evenodd\" d=\"M1.807 36.636 L33.807 2.35A3 3 0 0 1 38.193 2.35L68.838 35.183A3 3 0 0 1 68.838 39.277L48.748 60.802A3 3 0 0 1 44.181 60.589L36.901 51.166A3 3 0 0 0 34.527 50L20 50A3 3 0 0 0 17 53L17 69A3 3 0 0 1 14 72L4 72A3 3 0 0 1 1 69L1 38.682A3 3 0 0 1 1.807 36.636Z M26.302 32.991 L35.561 23.07A0.6 0.6 0 0 1 36.439 23.07L45.698 32.991A0.6 0.6 0 0 1 45.259 34L26.741 34A0.6 0.6 0 0 1 26.302 32.991Z\" transform=\"translate(0 0)\"/><path d=\"M22 53H33Q35 53 37 56L45 66Q46 68 48 66L76 36Q79 33 82 34Q86 35 86 40V48Q86 51 83 54L51.266666666666666 88Q46.63333333333333 94 42 88L22 62Q20 59 20 56Q20 53 22 53Z\" transform=\"translate(0 0)\"/></g></g></svg>",
+      "css": ".ds-website-logo{display:block;width:34px;height:34px;flex:none}"
     },
     {
       "name": "Public Brand Symbol",
       "kind": "custom",
       "refersTo": "website-brand-symbol",
-      "description": "Standalone pale-white glyph with the exact same two filled paths as the canonical tile.",
-      "html": "<svg class=\"ds-website-symbol\" role=\"img\" aria-label=\"Agents Vault\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-8 -8 112 112\"><g fill=\"#ececec\"><path fill-rule=\"evenodd\" d=\"M1.879 34.121 L33.879 2.121A3 3 0 0 1 38.121 2.121L70.121 34.121A3 3 0 0 1 71 36.243L71 38.757A3 3 0 0 1 70.121 40.879L49.391 61.609A3 3 0 0 1 44.911 61.341L36.901 51.147A3 3 0 0 0 34.542 50L20 50A3 3 0 0 0 17 53L17 69A3 3 0 0 1 14 72L4 72A3 3 0 0 1 1 69L1 36.243A3 3 0 0 1 1.879 34.121Z M25.624 32.976 L35.576 23.024A0.6 0.6 0 0 1 36.424 23.024L46.376 32.976A0.6 0.6 0 0 1 45.951 34L26.049 34A0.6 0.6 0 0 1 25.624 32.976Z\" transform=\"translate(0 0)\"/><path d=\"M22 53H33Q35 53 37 56L45 66Q46 68 48 66L76 36Q79 33 82 34Q86 35 86 40V48Q86 51 83 54L53 88Q48 94 42 88L22 62Q20 59 20 56Q20 53 22 53Z\" transform=\"translate(0 0)\"/></g></svg>",
-      "css": ".ds-website-symbol{display:block;width:46px;height:46px;flex:none}"
+      "description": "Standalone pale glyph with aligned A/V diagonals, used in the public header and broker node.",
+      "html": "<svg class=\"ds-website-symbol\" role=\"img\" aria-label=\"Agents Vault\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-8 -8 112 112\"><g fill=\"#ececec\"><path fill-rule=\"evenodd\" d=\"M1.807 36.636 L33.807 2.35A3 3 0 0 1 38.193 2.35L68.838 35.183A3 3 0 0 1 68.838 39.277L48.748 60.802A3 3 0 0 1 44.181 60.589L36.901 51.166A3 3 0 0 0 34.527 50L20 50A3 3 0 0 0 17 53L17 69A3 3 0 0 1 14 72L4 72A3 3 0 0 1 1 69L1 38.682A3 3 0 0 1 1.807 36.636Z M26.302 32.991 L35.561 23.07A0.6 0.6 0 0 1 36.439 23.07L45.698 32.991A0.6 0.6 0 0 1 45.259 34L26.741 34A0.6 0.6 0 0 1 26.302 32.991Z\" transform=\"translate(0 0)\"/><path d=\"M22 53H33Q35 53 37 56L45 66Q46 68 48 66L76 36Q79 33 82 34Q86 35 86 40V48Q86 51 83 54L51.266666666666666 88Q46.63333333333333 94 42 88L22 62Q20 59 20 56Q20 53 22 53Z\" transform=\"translate(0 0)\"/></g></svg>",
+      "css": ".ds-website-symbol{display:block;width:34px;height:34px;flex:none}@media(max-width:500px){.ds-website-symbol{width:28px;height:28px}}"
     }
   ],
   "narrative": {
     "northStar": "Focused settings",
-    "overview": "Agents Vault uses a quiet, compact settings language for local credential administration. Neutral surfaces and clear label/value relationships carry the interface. Rounded controls, restrained system typography, and immediate state feedback express the user-approved Apple and shadcn/HeroUI direction.\n\nDark is the initial appearance, using three principal near-black surface tones. The main canvas uses the darkest tone, grouped panels use the middle tone, and compact details and selection states use the lightest tone. Pure black is excluded from these surfaces by the user-approved palette refinement. An optional light palette uses the same semantic roles. The operator interface is semantic UI with vector icons; it does not depend on photography or shipping raster artwork. The operator guidance is extracted from `web/src/styles.css` and the components in `web/src/App.tsx`.\n\nThe public website applies the same rounded Apple and shadcn direction at a more spacious reading scale. Its named direction is **Readable projects with deliberate access**: neutral windows, readable configuration, and a restrained lavender accent for actions and connection feedback. Self-hosted Geist sans and Geist Mono add precise typographic hierarchy, while structural rails and section dividers organize the public canvas. Website tokens are scoped with `website-`; the console retains its neutral primary actions. Public runtime sources are `website/src/styles/landing.css`, `website/src/styles/docs.css`, and the Astro scene components. The registered [public surface brief](.impeccable/surfaces/website-src-pages-index-astro.md) owns the landing composition and reading sequence.",
+    "overview": "Agents Vault uses a quiet, compact settings language for local credential administration. Neutral surfaces and clear label/value relationships carry the interface. Rounded controls, restrained system typography, and immediate state feedback express the user-approved Apple and shadcn/HeroUI direction.\n\nDark is the initial appearance, using three principal near-black surface tones. The main canvas uses the darkest tone, grouped panels use the middle tone, and compact details and selection states use the lightest tone. Pure black is excluded from these surfaces by the user-approved palette refinement. An optional light palette uses the same semantic roles. The operator interface is semantic UI with vector icons; it does not depend on photography or shipping raster artwork. The operator guidance is extracted from `web/src/styles.css` and the components in `web/src/App.tsx`.\n\nThe public website applies the same rounded Apple and shadcn direction at a more spacious reading scale. Its named direction is **Readable projects with deliberate access**: monochrome windows, readable configuration, compact actions, and pale emphasis for connection feedback. Self-hosted Geist sans and Geist Mono add precise typographic hierarchy, while structural rails and section dividers organize the public canvas. Website tokens are scoped with `website-`; the console retains its neutral primary actions. Public runtime sources are `website/src/styles/landing.css`, `website/src/styles/docs.css`, and the Astro scene components. The registered [public surface brief](.impeccable/surfaces/website-src-pages-index-astro.md) owns the landing composition and reading sequence.",
     "keyCharacteristics": [
       "Three near-black surface tones in dark mode, with neutral text and a separate light appearance.",
       "Compact pill actions and gently rounded grouped settings.",
       "Flat surfaces separated by tone and thin borders.",
       "Functional system type with explicit heading and control hierarchy.",
       "Brief state transitions with static feedback under reduced motion.",
-      "Public pages use Geist headings and prose, Geist Mono configuration, structural rails, flat rounded windows, and lavender action and trace feedback."
+      "Public pages use Geist headings and prose, Geist Mono configuration, structural rails, flat rounded windows, and monochrome action and trace feedback."
     ],
     "rules": [
       {
@@ -637,8 +637,8 @@
         "section": "colors"
       },
       {
-        "name": "The Public Accent Rule",
-        "body": "Use the website accent for actions, focus, selection, and delivery feedback; retain neutral surfaces and the operator console's existing primary roles.",
+        "name": "The Public Emphasis Rule",
+        "body": "Use the website emphasis roles for actions, focus, selection, and delivery feedback; retain neutral surfaces and the operator console's existing primary roles.",
         "section": "colors"
       },
       {
@@ -654,11 +654,10 @@
       "Do keep supporting metadata muted while headings, values, and focus use the text role.",
       "Do provide visible keyboard focus and retain static state feedback under reduced motion.",
       "Do allow long identifiers, hosts, and command previews to wrap.",
-      "Do scope the lavender accent and Geist typography to the public website and preserve its flat neutral window materials.",
+      "Do use the public monochrome emphasis roles and Geist typography consistently with flat neutral window materials.",
       "Do reuse the canonical public tile or standalone glyph and preserve the two-piece geometry.",
       "Do align structural rails and section dividers with the public reading grid and keep reference details in separated rows.",
-      "Do retain readable static scenes, visible keyboard focus, and the local-only placeholder behavior.",
-      "Do keep media captions and transcript synchronized with the illustrative synthetic story and factual limits."
+      "Do retain readable static scenes, visible keyboard focus, and the local-only placeholder behavior."
     ],
     "donts": [
       "Don't introduce teal or blue accent styling into the operator console's approved neutral world.",
@@ -667,7 +666,7 @@
       "Don't rely on shadows or raster artwork to explain the existing settings hierarchy.",
       "Don't turn passive badges into controls without explicit interactive semantics.",
       "Don't use maturity labels in public copy; state the actual delivery, custody, and platform limits.",
-      "Don't treat illustrative configuration, diagrams, or media as live vault access or evidence of production custody."
+      "Don't treat illustrative configuration or diagrams as live vault access or evidence of production custody."
     ]
   }
 }

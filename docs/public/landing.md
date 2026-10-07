@@ -32,12 +32,6 @@ New credentials have no release grants. For direct secrets, choose the executabl
 
 [Read about actions and approvals](actions-and-approvals.md)
 
-## Watch the path.
-
-A 37-second explainer follows project configuration, explicit grants, action review, and credential injection. The video is silent, with English captions and illustrative synthetic data.
-
-[Read the video transcript](/media/agents-vault-transcript.md)
-
 ## Know the current boundary.
 
 SQLCipher is the initial storage adapter. Native keyrings are planned. Proxy actions currently use synthetic credentials; the host command is not confined. Linux and macOS component tests exist, while installed-platform and whole-agent custody gates remain open.

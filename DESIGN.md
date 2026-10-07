@@ -23,13 +23,13 @@ colors:
   light-primary: "#18181b"
   light-primary-ink: "#fff"
   website-divider: "#303030"
-  website-accent: "#c4a7ff"
-  website-accent-hover: "#d6c2ff"
-  website-accent-surface: "#2e253e"
-  website-accent-ink: "#241735"
-  website-light-accent: "#65419a"
-  website-light-accent-low: "#f1e9ff"
-  website-light-accent-high: "#442467"
+  website-accent: "#ececec"
+  website-accent-hover: "#ffffff"
+  website-accent-surface: "#2f2f2f"
+  website-accent-ink: "#171717"
+  website-light-accent: "#333333"
+  website-light-accent-low: "#eeeeef"
+  website-light-accent-high: "#171717"
 typography:
   headline:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
@@ -87,7 +87,7 @@ typography:
     lineHeight: 1.8
   website-action:
     fontFamily: "Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-    fontSize: "18px"
+    fontSize: "14px"
     fontWeight: 600
   website-code:
     fontFamily: "Geist Mono, ui-monospace, SFMono-Regular, Consolas, monospace"
@@ -168,23 +168,25 @@ components:
   website-brand-mark:
     backgroundColor: "{colors.website-accent}"
     textColor: "{colors.website-accent-ink}"
-    width: "46px"
-    height: "46px"
+    width: "34px"
+    height: "34px"
   website-brand-symbol:
     textColor: "{colors.text}"
+    width: "34px"
+    height: "34px"
   website-button-primary:
     backgroundColor: "{colors.website-accent}"
     textColor: "{colors.website-accent-ink}"
     typography: "{typography.website-action}"
     rounded: "{rounded.pill}"
-    padding: "13px 26px"
+    padding: "10px 20px"
   website-button-primary-hover:
     backgroundColor: "{colors.website-accent-hover}"
   website-button-secondary:
     backgroundColor: "transparent"
     textColor: "{colors.text}"
     rounded: "{rounded.pill}"
-    padding: "13px 26px"
+    padding: "10px 20px"
   website-window:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.text}"
@@ -215,7 +217,7 @@ Agents Vault uses a quiet, compact settings language for local credential admini
 
 Dark is the initial appearance, using three principal near-black surface tones. The main canvas uses the darkest tone, grouped panels use the middle tone, and compact details and selection states use the lightest tone. Pure black is excluded from these surfaces by the user-approved palette refinement. An optional light palette uses the same semantic roles. The operator interface is semantic UI with vector icons; it does not depend on photography or shipping raster artwork. The operator guidance is extracted from `web/src/styles.css` and the components in `web/src/App.tsx`.
 
-The public website applies the same rounded Apple and shadcn direction at a more spacious reading scale. Its named direction is **Readable projects with deliberate access**: neutral windows, readable configuration, and a restrained lavender accent for actions and connection feedback. Self-hosted Geist sans and Geist Mono add precise typographic hierarchy, while structural rails and section dividers organize the public canvas. Website tokens are scoped with `website-`; the console retains its neutral primary actions. Public runtime sources are `website/src/styles/landing.css`, `website/src/styles/docs.css`, and the Astro scene components. The registered [public surface brief](.impeccable/surfaces/website-src-pages-index-astro.md) owns the landing composition and reading sequence.
+The public website applies the same rounded Apple and shadcn direction at a more spacious reading scale. Its named direction is **Readable projects with deliberate access**: monochrome windows, readable configuration, compact actions, and pale emphasis for connection feedback. Self-hosted Geist sans and Geist Mono add precise typographic hierarchy, while structural rails and section dividers organize the public canvas. Website tokens are scoped with `website-`; the console retains its neutral primary actions. Public runtime sources are `website/src/styles/landing.css`, `website/src/styles/docs.css`, and the Astro scene components. The registered [public surface brief](.impeccable/surfaces/website-src-pages-index-astro.md) owns the landing composition and reading sequence.
 
 **Key Characteristics:**
 
@@ -224,21 +226,21 @@ The public website applies the same rounded Apple and shadcn direction at a more
 - Flat surfaces separated by tone and thin borders.
 - Functional system type with explicit heading and control hierarchy.
 - Brief state transitions with static feedback under reduced motion.
-- Public pages use Geist headings and prose, Geist Mono configuration, structural rails, flat rounded windows, and lavender action and trace feedback.
+- Public pages use Geist headings and prose, Geist Mono configuration, structural rails, flat rounded windows, and monochrome action and trace feedback.
 
 ## Colors
 
-The operator palette distinguishes surfaces through neutral tone. The public website adds a lavender accent within that neutral field. Frontmatter values record the default dark palette and the implemented light replacements; CSS custom properties remain the runtime source.
+The operator palette distinguishes surfaces through neutral tone. The public website uses the same achromatic field, with pale actions, restrained neutral feedback, and darker emphasis in light documentation appearance. Frontmatter values record the default dark palette and the implemented light replacements; CSS custom properties remain the runtime source.
 
 ### Primary
 
 - **Primary:** high-contrast action fill, paired with primary ink for readable action text. The fill is pale in dark mode and dark in light mode.
 - **Primary Ink:** text inside the filled primary action.
 
-### Public Website Accent
+### Public Website Emphasis
 
-- **Soft Lavender:** the public brand tile, primary actions, keyboard focus, selected environment labels, connector endpoints, delivery traces, and highlighted configuration references. The hover tone lightens filled actions; the deep ink role keeps their text and the tiled glyph readable. The accent surface supports the selected environment segment.
-- **Reading Accent:** documentation uses the public accent in dark appearance and a deeper purple with pale supporting fill in light appearance. These replacements are scoped to Starlight's documentation theme.
+- **Pale Emphasis:** the public brand tile, primary actions, keyboard focus, selected environment labels, connector endpoints, and delivery traces. Hover uses white; the dark ink role keeps action text and the tiled glyph readable. The emphasis surface uses the existing subtle gray for selected segments and highlighted configuration references.
+- **Reading Emphasis:** documentation uses pale emphasis in dark appearance and charcoal with a pale supporting fill in light appearance. These replacements are scoped to Starlight's documentation theme.
 
 ### Neutral
 
@@ -259,7 +261,7 @@ The operator palette distinguishes surfaces through neutral tone. The public web
 
 **The Darkest Canvas Rule.** Keep the dark main canvas at the background tone; panels and compact details step lighter above it.
 
-**The Public Accent Rule.** Use the website accent for actions, focus, selection, and delivery feedback; retain neutral surfaces and the operator console's existing primary roles.
+**The Public Emphasis Rule.** Use the website emphasis roles for actions, focus, selection, and delivery feedback; retain neutral surfaces and the operator console's existing primary roles.
 
 ## Typography
 
@@ -283,7 +285,7 @@ The sign-in introduction has a contextual heading at (32px), weight (650), line 
 
 **Public Sans:** Geist variable, with the existing platform sans stack as fallback. **Public Mono:** Geist Mono variable, falling through UI monospace, SFMono-Regular, Consolas, and monospace. Both font faces are served locally from `website/public/fonts/`, support weights (100–900), and use `font-display: swap`. The shared `website/src/styles/fonts.css` is imported by landing and documentation styles. The font assets are bundled from the official `geist` package (1.7.2) with the SIL Open Font License (1.1).
 
-The public display heading uses the website display token at weight (600), with a larger, closely spaced two-line treatment and balanced wrapping. Introductory copy is (21px) with line height (1.5), reduced to (17px) on intermediate widths. Section headings use the website headline token and reduce to (32px), then (30px). Longer section copy uses the website body token and stays within (72ch); flow and video introductions use (75ch). Configuration uses the website code stack, with tabular line numbers and responsive sizes. Documentation prose uses (.96rem), line height (1.75), and a (72ch) measure. It shares Geist sans, Geist Mono for code, and tightened heading spacing. Filename headings use Geist Mono to distinguish configuration from explanatory prose.
+The public display heading uses the website display token at weight (600), with a larger, closely spaced two-line treatment and balanced wrapping. Introductory copy is (21px) with line height (1.5), reduced to (17px) on intermediate widths. Section headings use the website headline token and reduce to (32px), then (30px). Longer section copy uses the website body token and stays within (72ch); flow introductions use (75ch). Configuration uses the website code stack, with tabular line numbers and responsive sizes. Documentation prose uses (.96rem), line height (1.75), and a (72ch) measure. It shares Geist sans, Geist Mono for code, and tightened heading spacing. Filename headings use Geist Mono to distinguish configuration from explanatory prose.
 
 ## Layout
 
@@ -301,15 +303,15 @@ Spacing is compact around individual controls and wider between sections. It is 
 
 The landing canvas centers a shell up to (1416px) wide with desktop side space (60px), intermediate side space (32px), and compact side space (18px). The hero pairs a large left-aligned introduction with offset project and reference windows. Intermediate desktop widths scale the composition proportionally. Below (800px), the hero and supporting two-column sections stack; below (500px), the windows become fully readable sequential blocks and the delivery flow becomes vertical. Preserve text and diagram legibility when adapting the registered surface.
 
-Single-pixel structural rails sit outside the content shell at (28px) on wide screens, (18px) at intermediate widths, and (12px) on compact screens. The configuration-and-release statement has dividers above and below; its supporting copy is separated by a vertical rule where the layout permits. Configuration, action review, and explainer sections begin with the same divider role. These lines establish a reading grid across the otherwise flat canvas.
+Single-pixel structural rails sit outside the content shell at (28px) on wide screens, (18px) at intermediate widths, and (12px) on compact screens. The configuration-and-release statement has dividers above and below; its supporting copy is separated by a vertical rule where the layout permits. Configuration and action review sections begin with the same divider role. These lines establish a reading grid across the otherwise flat canvas.
 
-Lower sections have generous spacing using the website section steps. The local configuration output and action review list align with explanatory copy on wide screens. The explainer occupies the available width at its native (16:9) ratio. Documentation has a (48rem) content width and (17rem) sidebar; search, theme choice, and Markdown tools stay within its reading layout.
+The six authored landing sections cover the configuration-and-release boundary, reviewed delivery, placeholder output, action review, current limits, and documentation exports. Lower sections have generous spacing using the website section steps. The local configuration output and action review list align with explanatory copy on wide screens. Documentation has a (48rem) content width and (17rem) sidebar; search, theme choice, and Markdown tools stay within its reading layout.
 
 ## Elevation & Depth
 
 The operator implementation uses no box shadows. Tone changes and single-pixel borders distinguish the outer shell, grouped settings, selected rows, and fields. The sign-in panel uses the panel tone to separate authentication from its surrounding surface.
 
-The public website also uses no box shadows. Overlap, stacking order, tonal fills, and single-pixel outlines establish the relationship between the project and reference windows. Reference details sit directly on their window surface in separated rows. Flow nodes, configuration output, video, and the limits panel retain this flat material character.
+The public website also uses no box shadows. Overlap, stacking order, tonal fills, and single-pixel outlines establish the relationship between the project and reference windows. Reference details sit directly on their window surface in separated rows. Flow nodes, configuration output, and the limits panel retain this flat material character.
 
 ### Named Rules
 
@@ -321,9 +323,9 @@ Actions and segmented navigation use fully rounded pills. Fields and icon tiles 
 
 Vector icons are normally (18px) with stroke width (1.65). Icon-only controls use circular silhouettes. Selected and inactive status are expressed through tone, labels, and iconography rather than color-coded decoration.
 
-Public project and credential-reference windows use the website project-window radius; placeholder output, flow nodes, video, and the limits panel use the website window radius. Credential-reference details use transparent rows with bottom dividers; the final row omits its divider. Connection paths use a curved corner and round endpoints. Public diagrams are CSS geometry with inline stroke SVG icons; the landing uses (22px) base icons at stroke width (1.5). Desktop overlap becomes stacked windows on compact screens.
+Public project and credential-reference windows use the website project-window radius; placeholder output, flow nodes, and the limits panel use the website window radius. Credential-reference details use transparent rows with bottom dividers; the final row omits its divider. Connection paths use a curved corner and round endpoints. Public diagrams are CSS geometry with inline stroke SVG icons; the landing uses (22px) base icons at stroke width (1.5). Desktop overlap becomes stacked windows on compact screens.
 
-The public brand glyph is a compact, closed A/V formed by two interlocking filled pieces. The A has a symmetric roof and triangular aperture, with rounded exterior junctions and balanced band widths. The canonical tile uses website accent fill and ink; the standalone glyph uses the pale text role. Both are native vector shapes independent of Geist or any other font.
+The public brand glyph is a compact, closed A/V formed by two interlocking filled pieces. The A has a symmetric roof and triangular aperture, with rounded exterior junctions and matched diagonals. Corresponding A and V edges share a rise/run ratio of (15/14), approximately (47°). The straight closing seam preserves a uniform perpendicular gap of (3 glyph units). The canonical tile uses pale emphasis fill and dark ink; the standalone glyph uses the pale text role. Both are native vector shapes independent of Geist or any other font.
 
 ## Components
 
@@ -366,27 +368,27 @@ Credential selection combines an icon tile, identifier, host, and trailing chevr
 
 ### Public Brand Mark
 
-`website/public/brand/av-mark.svg` is the canonical lavender tile with a dark interlocking A/V glyph. `website/public/brand/av-symbol.svg` contains the exact same two glyph paths in pale white, without the tile. Preserve the filled silhouettes, negative space, and relative placement of both pieces; reuse these assets for public brand treatments.
+`website/public/brand/av-mark.svg` is the canonical neutral tile with a dark interlocking A/V glyph. `website/public/brand/av-symbol.svg` contains the exact same two glyph paths in pale white, without the tile. Preserve the filled silhouettes, negative space, and relative placement of both pieces; reuse these assets for public brand treatments.
 
-The landing header and delivery broker node use the canonical tile at (46px) and (45px), respectively. The header reduces to (31px) on compact screens, and the documentation title uses (34px). These placements are static; the surrounding name or heading supplies the accessible label. Content preparation derives `/favicon.svg` from the canonical tile, keeping the public icon consistent with the site mark.
+The landing header and delivery broker node use the standalone glyph at (34px) and (45px), respectively. The header glyph reduces to (28px) on compact screens. The documentation title uses the canonical neutral tile at (34px). These placements are static; the surrounding name or heading supplies the accessible label. Content preparation derives `/favicon.svg` from the canonical tile, keeping the public icon consistent with the site mark.
 
 ### Public Website Actions and Navigation
 
-Public calls to action use larger pill geometry and a minimum desktop height of (50px), reducing to (44px) on compact screens. Primary actions use website accent fill and ink; secondary actions use a border and neutral hover fill. Keyboard focus uses a (2px) accent outline with offset (5px). State changes use (160ms ease-out) when motion is allowed. The public header pairs the product name with Documentation and GitHub links; compact layouts retain both destinations.
+Public calls to action use compact pills with (14px) type, padding (10px 20px), and minimum height (44px). Wide layouts give primary and secondary actions minimum widths of (201px) and (152px); intermediate layouts release those minimum widths. Compact screens use (13px) type and horizontal padding (16px). Primary actions use pale website emphasis fill and dark ink; secondary actions use a border and neutral hover fill. Keyboard focus uses a (2px) pale outline with offset (5px). State changes use (160ms ease-out) when motion is allowed.
+
+The public header is (80px) high, with the product name at (18px), navigation at (14px), and a standalone glyph beside the name. Intermediate desktop widths scale the composition proportionally. On compact screens, the header is (72px) high, the name uses (15px), and navigation uses (12px). Documentation and GitHub remain visible.
 
 ### Public Configuration and Delivery Scenes
 
-The project scene uses overlapping flat windows, numbered schema-2 configuration, and a lavender-highlighted credential reference. Reference, access policy, and default grants are transparent rows inside their shared window, separated with bottom borders. A curved connector relates the readable project to its reference details. The lower flow presents the command, broker, and HTTPS provider with labeled rails and an explicit illustrative synthetic-action caption. Both diagrams remain understandable when static.
+The project scene uses overlapping flat windows, numbered schema-2 configuration, and a subtly highlighted credential reference. Reference, access policy, and default grants are transparent rows inside their shared window, separated with bottom borders. A curved connector relates the readable project to its reference details. The lower flow presents the command, broker, and HTTPS provider with labeled rails and an explicit illustrative synthetic-action caption. Both diagrams remain understandable when static.
 
-The environment picker is a labeled group of buttons using `aria-pressed`. Selection changes only the public `APP_ENV` example and announces the illustrative output; the credential remains an unresolved placeholder. It performs no credential lookup. Its selected segment uses website accent-surface fill and website accent text, with inset focus offset (-2px).
+The environment picker is a labeled group of buttons using `aria-pressed`. Selection changes only the public `APP_ENV` example and announces the illustrative output; the credential remains an unresolved placeholder. It performs no credential lookup. Its selected segment uses website emphasis-surface fill and pale emphasis text, with inset focus offset (-2px).
 
-Connection traces use a (6s) cycle with `cubic-bezier(.16, 1, .3, 1)` easing; the outbound flow starts (3s) later. Animation runs only while its scene is visible and the document is active. The pause control applies to these traces and changes to Resume animations when paused. Reduced motion keeps static paths and state feedback, removes transitions and smooth scrolling, and hides the unnecessary motion control. The video has independent native playback controls.
+Connection traces use a (6s) cycle with `cubic-bezier(.16, 1, .3, 1)` easing; the outbound flow starts (3s) later. Animation runs only while its scene is visible and the document is active. The pause control applies to these traces and changes to Resume animations when paused. Reduced motion keeps static paths and state feedback, removes transitions and smooth scrolling, and hides the unnecessary motion control.
 
-### Public Explainer and Reading Tools
+### Public Reading Tools
 
-The locally served (37-second), silent Forma explainer uses English captions, illustrative synthetic data, a poster, native controls, and MP4/WebM sources. A selectable WebVTT track and Markdown transcript accompany the video; editable source and provenance live in `website/media-source/`. Keep factual custody and platform limits visible in the media and surrounding copy. The video does not autoplay.
-
-Documentation preserves Starlight navigation, Pagefind search, and dark/light/system appearance. Read Markdown and Copy page use the generated direct Markdown files; copy feedback provides a direct-link recovery. Rounded search and reading controls follow the same compact geometry, with accent-colored keyboard focus.
+Documentation preserves Starlight navigation, Pagefind search, and dark/light/system appearance. Read Markdown and Copy page use the generated direct Markdown files; copy feedback provides a direct-link recovery. Rounded search and reading controls follow the same compact geometry, with neutral emphasis for keyboard focus.
 
 ## Do's and Don'ts
 
@@ -398,11 +400,10 @@ Documentation preserves Starlight navigation, Pagefind search, and dark/light/sy
 - **Do** keep supporting metadata muted while headings, values, and focus use the text role.
 - **Do** provide visible keyboard focus and retain static state feedback under reduced motion.
 - **Do** allow long identifiers, hosts, and command previews to wrap.
-- **Do** scope the lavender accent and Geist typography to the public website and preserve its flat neutral window materials.
+- **Do** use the public monochrome emphasis roles and Geist typography consistently with flat neutral window materials.
 - **Do** reuse the canonical public tile or standalone glyph and preserve the two-piece geometry.
 - **Do** align structural rails and section dividers with the public reading grid and keep reference details in separated rows.
 - **Do** retain readable static scenes, visible keyboard focus, and the local-only placeholder behavior.
-- **Do** keep media captions and transcript synchronized with the illustrative synthetic story and factual limits.
 
 ### Don't:
 
@@ -412,4 +413,4 @@ Documentation preserves Starlight navigation, Pagefind search, and dark/light/sy
 - **Don't** rely on shadows or raster artwork to explain the existing settings hierarchy.
 - **Don't** turn passive badges into controls without explicit interactive semantics.
 - **Don't** use maturity labels in public copy; state the actual delivery, custody, and platform limits.
-- **Don't** treat illustrative configuration, diagrams, or media as live vault access or evidence of production custody.
+- **Don't** treat illustrative configuration or diagrams as live vault access or evidence of production custody.

@@ -16,7 +16,7 @@ const sections = await Promise.all(content.map(async (section) => {
   const separator = section.indexOf('\n');
   return { title: section.slice(0, separator), html: (await processor.render(section.slice(separator + 1))).code };
 }));
-if (sections.length !== 7) throw new Error('Landing requires all seven authored sections.');
+if (sections.length !== 6) throw new Error('Landing requires all six authored sections.');
 const canonical = Astro.site ? new URL('/', Astro.site).href : undefined;
 ---
 <!doctype html>
@@ -31,7 +31,7 @@ const canonical = Astro.site ? new URL('/', Astro.site).href : undefined;
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <div class="site-shell">
-      <header class="site-header"><a class="brand" href="/" aria-label="Agents Vault home"><img class="brand-mark" src="/brand/av-mark.svg" width="48" height="48" alt="" />Agents Vault</a><nav aria-label="Main navigation"><a href="/docs/">Documentation</a><a href={repository}>GitHub</a></nav></header>
+      <header class="site-header"><a class="brand" href="/" aria-label="Agents Vault home"><img class="brand-mark" src="/brand/av-symbol.svg" width="48" height="48" alt="" />Agents Vault</a><nav aria-label="Main navigation"><a href="/docs/">Documentation</a><a href={repository}>GitHub</a></nav></header>
       <main id="main">
         <section class="intro" aria-labelledby="headline">
           <div class="intro-copy"><h1 id="headline">{headline.map((line) => <span>{line}</span>)}</h1><p class="description">{intro[1]}</p><div class="intro-links"><a class="button primary" href="/docs/quickstart/">Start with the CLI <Mark name="arrow" /></a><a class="button secondary" href="/docs/">Read the docs</a></div></div>
@@ -54,9 +54,8 @@ const canonical = Astro.site ? new URL('/', Astro.site).href : undefined;
           </div>
         </section>
         <section class="actions-story" aria-labelledby="action-heading"><div><h2 id="action-heading">{sections[3].title}</h2><div class="section-copy" set:html={sections[3].html} /></div><ul class="review-fields" aria-label="Fields shown for a frozen action"><li><span>Command</span><strong>Executable and arguments</strong></li><li><span>Destination</span><strong>Exact host</strong></li><li><span>Credential</span><strong>Selected version</strong></li><li><span>Limits</span><strong>Runtime and request quotas</strong></li></ul></section>
-        <section class="explainer" aria-labelledby="video-heading"><div class="section-heading"><h2 id="video-heading">{sections[4].title}</h2><span>37 seconds · Silent · English captions</span></div><div class="video-intro" set:html={sections[4].html} /><video controls preload="none" playsinline width="1280" height="720" poster="/media/agents-vault-poster.webp" aria-label="Agents Vault configuration and credential delivery explainer"><source src="/media/agents-vault-explainer.webm" type="video/webm" /><source src="/media/agents-vault-explainer.mp4" type="video/mp4" /><track kind="captions" src="/media/agents-vault-en.vtt" srclang="en" label="English" /><p>Your browser cannot play this video. <a href="/media/agents-vault-explainer.mp4">Download the MP4</a> or <a href="/media/agents-vault-transcript.md">read the transcript</a>.</p></video></section>
-        <section class="limits-story" aria-labelledby="limits-heading"><h2 id="limits-heading">{sections[5].title}</h2><div class="section-copy" set:html={sections[5].html} /><div class="boundary-note" set:html={notice} /></section>
-        <section class="reading" aria-labelledby="reading-heading"><h2 id="reading-heading">{sections[6].title}</h2><div class="section-copy" set:html={sections[6].html} /></section>
+        <section class="limits-story" aria-labelledby="limits-heading"><h2 id="limits-heading">{sections[4].title}</h2><div class="section-copy" set:html={sections[4].html} /><div class="boundary-note" set:html={notice} /></section>
+        <section class="reading" aria-labelledby="reading-heading"><h2 id="reading-heading">{sections[5].title}</h2><div class="section-copy" set:html={sections[5].html} /></section>
       </main>
       <footer><span>Agents Vault</span><a href="/docs/limits-and-trust/">Limits and trust</a><a href={repository}>Source code</a><a href="/index.md">Read Markdown</a></footer>
     </div>
