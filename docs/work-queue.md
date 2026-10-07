@@ -2,6 +2,8 @@
 
 Status: actions after removing provider-specific and harness-specific packages, 2026-10-06. Complete the security gates in order; each gate needs evidence from the current provider-neutral build. Distribution and notarization work is deferred while the approval boundary is tested locally.
 
+For the current continuation checklist and completed release work, start with the [handoff](handoff.md).
+
 ## 1. Stabilize the generic workspace
 
 - Build and test all eight crates on Linux. Remove every stale type, feature, package option, and generated notice tied only to deleted integrations.
