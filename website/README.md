@@ -40,7 +40,34 @@ Before a public deployment, set the actual origin when checking and building:
 WEBSITE_ORIGIN=https://your-chosen-host.example npm run verify
 ```
 
-Replace that example with the approved origin. This sets canonical URLs, the sitemap, and absolute links in machine output. The default origin is the local preview, not a reserved public domain. Root-path hosting is the current configuration; hosting under a URL subpath needs a coordinated base-path update.
+Replace that example with the approved origin. This sets canonical URLs, the sitemap, and absolute links in machine output. The default origin is the local preview. Root-path hosting is the current configuration; hosting under a URL subpath needs a coordinated base-path update.
+
+## Cloudflare deployment
+
+The public target is `https://av.syntropika.ai`. The site uses [Workers Static Assets](https://developers.cloudflare.com/workers/framework-guides/web-apps/astro/) to serve the static build without a server-side Astro adapter. `wrangler.jsonc` defines the custom domain, real 404 responses, and directory-style HTML URLs. Workers development and preview URLs are disabled.
+
+The `Documentation website` GitHub Actions workflow checks public documentation and website changes on pull requests and `main`, and supports manual dispatch. It installs the locked dependencies, runs the strict checks and output verification, validates Wrangler with a dry run, and retains the built site as a five-day artifact. Production deployment consumes that same verified artifact. Pull requests cannot deploy or receive the Cloudflare token.
+
+Configure these repository settings, or the equivalent settings in the `documentation` GitHub environment:
+
+| Setting | Kind | Value |
+| --- | --- | --- |
+| `CLOUDFLARE_ACCOUNT_ID` | Variable | The account owning the site's Cloudflare zone |
+| `CLOUDFLARE_API_TOKEN` | Secret | A deployment token scoped to the intended account and zone |
+| `CLOUDFLARE_DEPLOY_ENABLED` | Repository variable | `true` to enable production deployment |
+
+Create the deployment token using Cloudflare's [Edit Cloudflare Workers template](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/), restricting its account and zone resources. Store it directly in GitHub Actions secrets. The token is available only to the deployment step. Add required reviewers to the `documentation` environment if publication needs an approval gate.
+
+Leave `CLOUDFLARE_DEPLOY_ENABLED` unset until the credentials and domain are ready; validation runs and deployment is visibly skipped. Once enabled, successful relevant pushes to `main` deploy automatically. A manual dispatch from `main` can deploy the current revision without a source change. Cloudflare provisions the custom domain's DNS and TLS certificate on the first deployment; an existing conflicting DNS record must be resolved first.
+
+To check a deployment locally without publishing:
+
+```sh
+WEBSITE_ORIGIN=https://av.syntropika.ai npm run verify
+npm run deploy:check
+```
+
+For an authenticated local deployment, set `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in your shell and run `npm run deploy` after those checks. To change the public domain, update the workflow origin and environment URL together with the Wrangler custom-domain route, then rebuild.
 
 ## Scope
 
