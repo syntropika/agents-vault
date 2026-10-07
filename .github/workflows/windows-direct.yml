@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: windows-direct-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   direct-cli:
     runs-on: windows-2022
@@ -21,7 +25,7 @@ jobs:
         run: rustup default stable
       - name: Build and test direct-mode crates
         shell: pwsh
-        run: cargo test --locked -p av-core -p av --all-targets
+        run: cargo test --locked --release --target x86_64-pc-windows-msvc -p av-core -p av --all-targets
       - name: Build the offline CLI
         shell: powershell
         run: cargo build --locked --release --target x86_64-pc-windows-msvc -p av
