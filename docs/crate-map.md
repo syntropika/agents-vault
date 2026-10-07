@@ -10,7 +10,7 @@ Status: provider-neutral core after the 2026-10-04 cleanup. The workspace contai
 | `av-proxy` | HTTPS CONNECT transport, exact-host and TLS checks, credential insertion, and bounded request handling. |
 | `av-runner` | Linux child execution and network isolation primitive. |
 | `av-vmm` | macOS task guest supervisor using Apple Virtualization.framework. |
-| `av-mcp` | MCP task request and URL review adapter; it holds no credentials or operator approval capability and exposes no execution tool. |
+| `av-mcp` | MCP Apps request and review adapter with enrolled, bounded decision authority; it holds no credentials or operator administration capability and exposes no execution tool. |
 | `av-fixture-cli` (binary `av-fixture`) | Provider-neutral test CLI for placeholder and proxy verification. |
 
 The core connection record stores an ID, exact host, version, active state, credential, and release policy. It does not infer a provider's scopes or authorize arbitrary network operations. Project files can reference values but cannot widen the broker's operator-owned policy.
@@ -21,6 +21,6 @@ Linux and macOS currently share the task completion, relock, deadline, and proxy
 
 ## Dependency direction
 
-`av-core` defines stored records and policy. `avd` uses those records and the proxy transport. Platform runners execute bounded tasks. `av-mcp` presents broker-frozen requests and offers a local approval link. A client response cannot authorize a protected decision. The broker-owned page and installed operator helper each verify the vault passphrase; the helper uses the private administration channel. A future provider integration must not make the core schema, broker approval state, or base installer depend on one vendor or one harness.
+`av-core` defines stored records and policy. `avd` uses those records and the proxy transport. Platform runners execute bounded tasks. `av-mcp` presents broker-frozen requests and accepts App-only decisions through an explicitly enrolled harness session. Unenrolled sessions cannot authorize a decision, and the harness must enforce the App interaction boundary. The broker-owned page and installed operator helper verify the vault passphrase; the helper uses the private administration channel. A future provider integration must not make the core schema, broker approval state, or base installer depend on one vendor or one harness.
 
 The `web` package owns the local operator console. `avd/build.rs` embeds its compiled assets; `avd::operator_web` owns authenticated HTTP sessions and fixed management endpoints, while domain operations remain in the existing core and broker modules. The frontend is not a new Rust crate and adds no provider or harness launcher.

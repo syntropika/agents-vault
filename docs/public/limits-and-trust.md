@@ -32,7 +32,7 @@ Unlocking storage does not approve a task. Changing storage to a native keyring 
 
 ## Platform and protocol scope
 
-Linux and Apple silicon macOS have component and synthetic CLI evidence. The live public `av run` workflow reached a local synthetic HTTPS provider with `curl` on both platforms; broker and MCP suites also passed on macOS. These tests do not use a genuine provider account. An installed Linux systemd/AppArmor guest has synthetic acceptance evidence. Installed macOS custody, signing, and acceptance remain unverified; native Windows functional execution remains outstanding.
+Linux and Apple silicon macOS have component and synthetic CLI evidence. The live public `av run` workflow reached a local synthetic HTTPS provider with `curl` on both platforms; broker and MCP suites also passed on macOS. These tests do not use a genuine provider account. An installed Linux systemd/AppArmor guest has synthetic acceptance evidence. Installed macOS custody, signing, and acceptance remain unverified; Windows MSVC CLI tests and the offline package lifecycle passed; interactive secret delivery in a native Windows console remains unverified.
 
 The proxy currently supports HTTP/1.1 CONNECT with HTTP/1.1 inside TLS. HTTP/2, WebSockets, arbitrary CLI compatibility, and broad provider support are not implemented. See the [proxy crate notes](../../crates/av-proxy/README.md) for transport constraints.
 
