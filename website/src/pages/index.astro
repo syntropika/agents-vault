@@ -33,12 +33,14 @@ const canonical = Astro.site ? new URL('/', Astro.site).href : undefined;
     <div class="site-shell">
       <header class="site-header"><a class="brand" href="/" aria-label="Agents Vault home"><img class="brand-mark" src="/brand/av-symbol.svg" width="48" height="48" alt="" />Agents Vault</a><nav aria-label="Main navigation"><a href="/docs/">Documentation</a><a href={repository}>GitHub</a></nav></header>
       <main id="main">
+        <div class="hero">
         <section class="intro" aria-labelledby="headline">
           <div class="intro-copy"><h1 id="headline">{headline.map((line) => <span>{line}</span>)}</h1><p class="description">{intro[1]}</p><div class="intro-links"><a class="button primary" href="/docs/quickstart/">Start with the CLI <Mark name="arrow" /></a><a class="button secondary" href="/docs/">Read the docs</a></div></div>
           <ProjectScene />
         </section>
-        <section class="boundary" aria-label="Credential delivery boundary"><h2><span>Configuration stays readable.</span><span>Release stays explicit.</span></h2><p>Direct delivery exposes real values.<br />Protected proxy custody remains under development.</p></section>
         <a class="how-link" href="#delivery">How it works <Mark name="down" /></a>
+        </div>
+        <section class="boundary" aria-label="Credential delivery boundary"><h2><span>Configuration stays readable.</span><span>Release stays explicit.</span></h2><p>Direct delivery exposes real values.<br />Protected proxy custody remains under development.</p></section>
         <section id="delivery" class="delivery" aria-labelledby="delivery-heading">
           <div class="section-heading"><h2 id="delivery-heading">{sections[1].title}</h2><button id="motion-toggle" class="motion-toggle" type="button" aria-pressed="false" hidden><span class="motion-pause"><Mark name="pause" /></span><span class="motion-play"><Mark name="play" /></span><span>Pause animations</span></button></div>
           <div class="flow-intro" set:html={sections[1].html} />
