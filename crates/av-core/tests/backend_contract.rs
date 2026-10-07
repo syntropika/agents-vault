@@ -163,13 +163,14 @@ fn sqlcipher_competing_sessions_cannot_both_publish_the_same_snapshot() {
 }
 
 fn request() -> SecretAccessRequest {
+    let directory = std::env::current_dir().unwrap().join("synthetic");
     SecretAccessRequest {
-        executable: "/synthetic/tool".into(),
+        executable: directory.join("tool").to_str().unwrap().into(),
         executable_sha256: "a".repeat(64),
         arguments: vec![],
-        config_path: "/synthetic/av.toml".into(),
+        config_path: directory.join("av.toml").to_str().unwrap().into(),
         config_sha256: "b".repeat(64),
-        working_directory: "/synthetic".into(),
+        working_directory: directory.to_str().unwrap().into(),
         environment: None,
         delivery: DeliveryMode::ProtectedProxy,
         host: Some("api.example.test".into()),
